@@ -100,32 +100,34 @@ Reference: [GCP Network Topology Overview](https://cloud.google.com/network-inte
 
 ### 8. Data Processing and Storage
 - **FR-052**: Ingest Cloud Monitoring metrics via API with proper authentication
-- **FR-053**: Process VPC Flow Logs from Cloud Storage or BigQuery
+- **FR-053**: Process VPC Flow Logs exclusively from BigQuery using SQL queries and views
 - **FR-054**: Implement data aggregation matching GCP's hourly snapshots
 - **FR-055**: Store topology cache for improved performance
 - **FR-056**: Handle metric data freshness and availability constraints
 - **FR-057**: Support incremental data updates and historical data retention
+- **FR-058**: Query BigQuery VPC Flow Logs tables with time-based partitioning for performance
 
 ### 9. Performance and Scalability
-- **FR-058**: Handle large-scale topologies with >1000 entities efficiently
-- **FR-059**: Implement client-side graph rendering with WebGL acceleration
-- **FR-060**: Support graph pagination and lazy loading for large datasets
-- **FR-061**: Optimize API queries to minimize Cloud Monitoring costs
-- **FR-062**: Cache frequently accessed topology data with appropriate TTL
+- **FR-059**: Handle large-scale topologies with >1000 entities efficiently
+- **FR-060**: Implement client-side graph rendering with WebGL acceleration
+- **FR-061**: Support graph pagination and lazy loading for large datasets
+- **FR-062**: Optimize API queries to minimize Cloud Monitoring costs
+- **FR-063**: Cache frequently accessed topology data with appropriate TTL
+- **FR-064**: Optimize BigQuery queries with appropriate clustering and partitioning strategies
 
 ### 10. Monitoring and Insights
-- **FR-063**: Generate insights for entities with high egress traffic
-- **FR-064**: Detect and highlight network anomalies based on baseline patterns
-- **FR-065**: Provide network health indicators and status dashboards
-- **FR-066**: Support alerting on topology changes and traffic patterns
-- **FR-067**: Track and display network configuration changes over time
+- **FR-065**: Generate insights for entities with high egress traffic
+- **FR-066**: Detect and highlight network anomalies based on baseline patterns
+- **FR-067**: Provide network health indicators and status dashboards
+- **FR-068**: Support alerting on topology changes and traffic patterns
+- **FR-069**: Track and display network configuration changes over time
 
 ### 11. Export and Integration
-- **FR-068**: Export topology diagrams in various formats (PNG, SVG, PDF)
-- **FR-069**: Generate network analysis reports with metric summaries
-- **FR-070**: Export raw metric data and flow log analysis results
-- **FR-071**: Support API access for topology data integration
-- **FR-072**: Provide webhook notifications for significant topology changes
+- **FR-070**: Export topology diagrams in various formats (PNG, SVG, PDF)
+- **FR-071**: Generate network analysis reports with metric summaries
+- **FR-072**: Export raw metric data and flow log analysis results
+- **FR-073**: Support API access for topology data integration
+- **FR-074**: Provide webhook notifications for significant topology changes
 
 ## Detailed Metric Specifications
 
@@ -176,14 +178,23 @@ Usage: Identify internet-bound and internet-sourced traffic
 
 ### VPC Flow Logs Usage Patterns
 
-#### High-Granularity Connection Analysis:
+#### High-Granularity Connection Analysis via BigQuery:
 ```
-Required Fields:
-- srcaddr, destaddr (IP addresses)
-- srcport, destport (port numbers)  
-- protocol (TCP, UDP, ICMP)
-- bytes, packets (volume metrics)
-- start_time, end_time (temporal data)
+BigQuery Table Schema:
+- srcaddr, destaddr (STRING - IP addresses)
+- srcport, destport (INTEGER - port numbers)  
+- protocol (INTEGER - TCP=6, UDP=17, ICMP=1)
+- bytes, packets (INTEGER - volume metrics)
+- start_time, end_time (TIMESTAMP - temporal data)
+- src_vpc, dest_vpc (STRING - VPC network information)
+- src_instance, dest_instance (STRING - instance names)
+
+Required BigQuery Views:
+1. Hourly aggregated flow summaries
+2. Real-time flow analysis (last 1 hour)
+3. Security anomaly detection views
+4. Top talkers and communication patterns
+5. Port-based service classification
 
 Usage Scenarios:
 1. VM-to-VM specific connections (metrics only show VM-to-zone)
@@ -196,11 +207,22 @@ Usage Scenarios:
 #### Complementary Usage Strategy:
 ```
 Metrics (Coarse-grained): Use for entity-level aggregations, performance overview
-VPC Flow Logs (Fine-grained): Use for specific connection analysis, security monitoring
+VPC Flow Logs via BigQuery (Fine-grained): Use for specific connection analysis, security monitoring
 
 Example:
 - Metrics show: VM-A zone has 100GB traffic to VM-B zone
-- Flow Logs reveal: 80GB was HTTPS, 15GB was database traffic, 5GB was SSH
+- BigQuery Flow Logs reveal: 80GB was HTTPS, 15GB was database traffic, 5GB was SSH
+
+BigQuery Query Pattern:
+SELECT 
+  srcaddr, destaddr, srcport, destport, protocol,
+  SUM(bytes) as total_bytes,
+  COUNT(*) as connection_count
+FROM `project.dataset.vpc_flow_logs`
+WHERE start_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
+  AND src_vpc = 'my-vpc'
+GROUP BY srcaddr, destaddr, srcport, destport, protocol
+ORDER BY total_bytes DESC
 ```
 
 ### Data Collection Strategy
@@ -212,10 +234,10 @@ Example:
 - **Cost Optimization**: Use appropriate aggregation intervals, cache frequent queries
 
 #### VPC Flow Logs Processing:
-- **Source**: Cloud Storage or BigQuery exports
-- **Processing**: Real-time stream processing for alerts, batch processing for topology
-- **Sampling**: Support sampling rates (1:1, 1:10, 1:100) based on traffic volume
-- **Storage**: Time-partitioned for efficient historical queries
+- **Source**: BigQuery views exclusively (not Cloud Storage)
+- **Processing**: SQL-based queries on BigQuery tables for both real-time and batch processing
+- **Sampling**: Support sampling rates (1:1, 1:10, 1:100) based on traffic volume via BigQuery filtering
+- **Storage**: BigQuery time-partitioned tables for efficient historical queries and cost optimization
 
 ### Technical Implementation Notes
 
@@ -225,3 +247,50 @@ Based on GCP Network Topology documentation:
 3. **Graph Truncation**: Handle topologies >1000 nodes with truncation warnings
 4. **Multi-Project**: Support metrics scope configuration for cross-project visibility
 5. **Data Freshness**: Match GCP's 7-minute maximum delay for real-time data
+
+### BigQuery-Specific Implementation Requirements
+
+#### Table Structure and Partitioning:
+```sql
+-- Expected VPC Flow Logs table structure
+CREATE TABLE `project.dataset.vpc_flow_logs` (
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  srcaddr STRING,
+  destaddr STRING,
+  srcport INTEGER,
+  destport INTEGER,
+  protocol INTEGER,
+  bytes INTEGER,
+  packets INTEGER,
+  src_vpc STRING,
+  dest_vpc STRING,
+  src_instance STRING,
+  dest_instance STRING,
+  src_zone STRING,
+  dest_zone STRING
+)
+PARTITION BY DATE(start_time)
+CLUSTER BY src_vpc, dest_vpc, srcaddr, destaddr;
+```
+
+#### Required BigQuery Views:
+1. **Hourly Traffic Summary**: Aggregate flows by hour for topology snapshots
+2. **Real-time Analysis**: Last hour flows for current topology state  
+3. **Security Patterns**: Unusual port/protocol combinations
+4. **Top Talkers**: Highest volume communicators
+5. **Cross-VPC Traffic**: Inter-network communication patterns
+
+#### Query Optimization Requirements:
+- Use time-based partitioning for cost efficiency
+- Implement clustering on frequently filtered columns (VPC, IP addresses)
+- Cache query results for repeated topology requests
+- Use approximate aggregation functions for large datasets
+- Implement query timeouts and result size limits
+
+#### Cost Management:
+- Monitor BigQuery slot usage and query costs
+- Implement query result caching (24-hour TTL for topology data)
+- Use materialized views for frequently accessed aggregations
+- Set up query cost alerts and budgets
+- Optimize WHERE clauses to minimize data scanned
