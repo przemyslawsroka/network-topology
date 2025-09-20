@@ -1,0 +1,56 @@
+{
+  "name": "network-topology-frontend",
+  "version": "1.0.0",
+  "description": "Angular frontend for GCP Network Topology visualization",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "start:dev": "ng serve --configuration development --port 4200",
+    "start:prod": "ng serve --configuration production --port 4200",
+    "build": "ng build",
+    "build:dev": "ng build --configuration development",
+    "build:prod": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e"
+  },
+  "keywords": [
+    "angular",
+    "gcp",
+    "network-topology",
+    "oauth",
+    "material-design"
+  ],
+  "author": "Network Topology Team",
+  "license": "MIT",
+  "dependencies": {
+    "@angular/animations": "^18.2.0",
+    "@angular/cdk": "^18.2.14",
+    "@angular/common": "^18.2.0",
+    "@angular/compiler": "^18.2.0",
+    "@angular/core": "^18.2.0",
+    "@angular/forms": "^18.2.0",
+    "@angular/material": "^18.2.14",
+    "@angular/platform-browser": "^18.2.0",
+    "@angular/platform-browser-dynamic": "^18.2.0",
+    "@angular/router": "^18.2.0",
+    "google-auth-library": "^9.14.2",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.10"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^18.2.21",
+    "@angular/cli": "^18.2.21",
+    "@angular/compiler-cli": "^18.2.0",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-headless": "~6.4.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.5.0"
+  }
+}

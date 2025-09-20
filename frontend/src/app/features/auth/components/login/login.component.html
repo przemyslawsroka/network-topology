@@ -1,0 +1,55 @@
+<div class="login-container">
+  <div class="login-card">
+    <mat-card class="login-card-content">
+      <mat-card-header class="login-header">
+        <div mat-card-avatar class="login-avatar">
+          <mat-icon>cloud</mat-icon>
+        </div>
+        <mat-card-title>Network Topology</mat-card-title>
+        <mat-card-subtitle>Sign in to continue</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="login-content">
+        <div class="login-description">
+          <p>Welcome to Network Topology Viewer</p>
+          <p class="subtitle">Sign in with your Google Cloud Platform account to access network topology visualization and analytics.</p>
+        </div>
+
+        <div class="login-actions">
+          <button
+            mat-raised-button
+            color="primary"
+            class="google-signin-button"
+            (click)="signInWithGoogle()"
+            [disabled]="isLoading">
+            
+            <div class="button-content">
+              <mat-icon *ngIf="!isLoading" class="google-icon">account_circle</mat-icon>
+              <mat-spinner 
+                *ngIf="isLoading" 
+                diameter="20" 
+                class="signin-spinner">
+              </mat-spinner>
+              <span class="button-text">
+                {{ isLoading ? 'Signing in...' : 'Sign in with Google' }}
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <div class="login-info">
+          <mat-icon class="info-icon">info</mat-icon>
+          <p class="info-text">
+            This application requires Google Cloud Platform permissions to read network topology and flow logs data.
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="login-footer">
+      <p class="footer-text">
+        By signing in, you agree to allow this application to access your GCP resources with read-only permissions.
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<div class="gcp-layout">
+  <!-- Header -->
+  <mat-toolbar class="gcp-header" color="primary">
+    <button
+      mat-icon-button
+      class="menu-button"
+      (click)="toggleSidenav()"
+      aria-label="Toggle sidenav">
+      <mat-icon>menu</mat-icon>
+    </button>
+    
+    <div class="gcp-header-content">
+      <div class="gcp-logo">
+        <mat-icon class="gcp-cloud-icon">cloud</mat-icon>
+        <span class="gcp-title">Network Topology</span>
+      </div>
+      
+      <div class="gcp-header-spacer"></div>
+      
+      <div class="gcp-user-menu" *ngIf="currentUser$ | async as user">
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-avatar">
+          <img 
+            *ngIf="user.picture; else defaultAvatar" 
+            [src]="user.picture" 
+            [alt]="user.name"
+            class="avatar-image">
+          <ng-template #defaultAvatar>
+            <mat-icon>account_circle</mat-icon>
+          </ng-template>
+        </button>
+        
+        <mat-menu #userMenu="matMenu" class="user-menu">
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-email">{{ user.email }}</div>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="signOut()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign out</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <!-- Sidenav Container -->
+  <mat-sidenav-container class="gcp-sidenav-container">
+    <mat-sidenav
+      #sidenav
+      mode="side"
+      [opened]="sidenavOpened"
+      class="gcp-sidenav"
+      fixedInViewport="true">
+      
+      <nav class="gcp-nav">
+        <mat-nav-list class="gcp-nav-list">
+          <mat-list-item 
+            routerLink="/network-topology" 
+            routerLinkActive="active"
+            class="gcp-nav-item">
+            <mat-icon matListItemIcon>hub</mat-icon>
+            <span matListItemTitle>Network Topology</span>
+          </mat-list-item>
+        </mat-nav-list>
+      </nav>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="gcp-main-content">
+      <div class="gcp-content-wrapper">
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
