@@ -1,0 +1,35 @@
+{
+  "name": "network-topology",
+  "version": "1.0.0",
+  "description": "GCP Network Topology Visualization Application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "./start-dev.sh",
+    "start": "./start-dev.sh",
+    "frontend:dev": "cd frontend && npm run start:dev",
+    "frontend:build": "cd frontend && npm run build:prod",
+    "frontend:test": "cd frontend && npm test",
+    "install:frontend": "cd frontend && npm install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "gcp",
+    "network-topology",
+    "angular",
+    "oauth",
+    "visualization",
+    "google-cloud"
+  ],
+  "author": "Network Topology Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.17.0",
+    "npm": ">=8.0.0"
+  },
+  "workspaces": [
+    "frontend"
+  ]
+}
