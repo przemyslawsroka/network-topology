@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../../core/services/auth.service';
 import { User } from '../../../../core/models/user.model';
 import { Observable } from 'rxjs';
+import { NetworkGraphComponent } from '../network-graph/network-graph.component';
 
 @Component({
   selector: 'app-topology-view',
@@ -14,7 +15,8 @@ import { Observable } from 'rxjs';
     CommonModule,
     MatCardModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    NetworkGraphComponent
   ],
   templateUrl: './topology-view.component.html',
   styleUrls: ['./topology-view.component.scss']

@@ -1,0 +1,35 @@
+<div class="project-picker">
+  <button 
+    mat-stroked-button 
+    [matMenuTriggerFor]="projectMenu" 
+    class="project-selector"
+    *ngIf="selectedProject">
+    <div class="project-info">
+      <span class="project-name">{{ selectedProject.displayName }}</span>
+      <span class="project-id">{{ selectedProject.id }}</span>
+    </div>
+    <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
+  </button>
+
+  <mat-menu #projectMenu="matMenu" class="project-menu">
+    <div class="menu-header">
+      <span class="menu-title">Select a project</span>
+    </div>
+    <mat-divider></mat-divider>
+    
+    <ng-container *ngFor="let project of projects">
+      <button 
+        mat-menu-item 
+        (click)="onProjectSelect(project)"
+        [class.selected]="selectedProject?.id === project.id"
+        class="project-item">
+        <div class="project-details">
+          <div class="project-display-name">{{ project.displayName }}</div>
+          <div class="project-full-id">{{ project.id }}</div>
+        </div>
+        <mat-icon *ngIf="selectedProject?.id === project.id" class="check-icon">check</mat-icon>
+      </button>
+    </ng-container>
+  </mat-menu>
+</div>
+

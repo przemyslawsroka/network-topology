@@ -39,6 +39,10 @@
     }
   }
 
+  .gcp-project-picker {
+    margin-left: 24px;
+  }
+
   .gcp-header-spacer {
     flex: 1 1 auto;
   }
@@ -77,24 +81,32 @@
         height: 48px;
         margin: 0 8px 4px;
         border-radius: 24px;
-        transition: background-color 0.2s;
+        transition: all 0.2s ease;
+        cursor: pointer;
         
         &:hover {
           background-color: rgba(26, 115, 232, 0.08);
         }
         
-        &.active {
+        &.active,
+        &.mat-mdc-list-item-active {
           background-color: rgba(26, 115, 232, 0.12);
           color: #1a73e8;
           
           mat-icon {
-            color: #1a73e8;
+            color: #1a73e8 !important;
+          }
+          
+          span {
+            color: #1a73e8 !important;
+            font-weight: 600;
           }
         }
         
         mat-icon {
           color: #5f6368;
           margin-right: 12px;
+          font-size: 20px;
         }
         
         span {

@@ -7,65 +7,62 @@
   </div>
 
   <div class="topology-content">
-    <mat-card class="welcome-card">
-      <mat-card-header>
-        <div mat-card-avatar class="welcome-avatar">
-          <mat-icon>hub</mat-icon>
-        </div>
-        <mat-card-title>Welcome to Network Topology</mat-card-title>
-        <mat-card-subtitle *ngIf="currentUser$ | async as user">
-          Hello, {{ user.name }}
-        </mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content class="welcome-content">
-        <div class="features-grid">
-          <div class="feature-item">
-            <mat-icon class="feature-icon">visibility</mat-icon>
-            <h3>Network Visualization</h3>
-            <p>Interactive topology graphs showing your GCP network resources and connections.</p>
-          </div>
-
-          <div class="feature-item">
-            <mat-icon class="feature-icon">analytics</mat-icon>
-            <h3>Metrics & Analytics</h3>
-            <p>High-level network metrics and performance indicators in real-time.</p>
-          </div>
-
-          <div class="feature-item">
-            <mat-icon class="feature-icon">device_hub</mat-icon>
-            <h3>Flow Analysis</h3>
-            <p>VPC flow logs analysis to understand traffic patterns and anomalies.</p>
-          </div>
-
-          <div class="feature-item">
-            <mat-icon class="feature-icon">security</mat-icon>
-            <h3>Security Insights</h3>
-            <p>Network security analysis and threat detection capabilities.</p>
-          </div>
-        </div>
-
-        <div class="getting-started">
-          <h3>Getting Started</h3>
-          <ol class="steps-list">
-            <li>Connect your GCP project to start analyzing network topology</li>
-            <li>Configure VPC flow logs collection for detailed traffic analysis</li>
-            <li>Set up monitoring and alerting for network anomalies</li>
-            <li>Explore interactive visualizations and insights</li>
-          </ol>
-        </div>
-
-        <div class="action-buttons">
-          <button mat-raised-button color="primary" class="primary-action">
-            <mat-icon>add</mat-icon>
-            Connect GCP Project
-          </button>
-          <button mat-stroked-button color="primary" class="secondary-action">
-            <mat-icon>help</mat-icon>
-            View Documentation
-          </button>
-        </div>
+    <!-- Network Graph -->
+    <mat-card class="graph-card">
+      <mat-card-content>
+        <app-network-graph></app-network-graph>
       </mat-card-content>
     </mat-card>
+
+    <!-- Info Cards -->
+    <div class="info-cards">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <div mat-card-avatar class="info-avatar">
+            <mat-icon>visibility</mat-icon>
+          </div>
+          <mat-card-title>Network Visualization</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Interactive topology graphs showing your GCP network resources and connections.</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-header>
+          <div mat-card-avatar class="info-avatar">
+            <mat-icon>analytics</mat-icon>
+          </div>
+          <mat-card-title>Metrics & Analytics</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>High-level network metrics and performance indicators in real-time.</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-header>
+          <div mat-card-avatar class="info-avatar">
+            <mat-icon>device_hub</mat-icon>
+          </div>
+          <mat-card-title>Flow Analysis</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>VPC flow logs analysis to understand traffic patterns and anomalies.</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-header>
+          <div mat-card-avatar class="info-avatar">
+            <mat-icon>security</mat-icon>
+          </div>
+          <mat-card-title>Security Insights</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Network security analysis and threat detection capabilities.</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 </div>

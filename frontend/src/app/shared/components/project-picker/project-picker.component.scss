@@ -1,0 +1,128 @@
+.project-picker {
+  .project-selector {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 8px 6px 12px;
+    min-width: 220px;
+    max-width: 320px;
+    height: 36px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    
+    &:focus {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .project-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      flex: 1;
+      min-width: 0;
+      justify-content: center;
+      
+      .project-name {
+        font-size: 13px;
+        font-weight: 400;
+        color: white;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        line-height: 1.2;
+        margin-bottom: 1px;
+      }
+      
+      .project-id {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.8);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        line-height: 1.1;
+      }
+    }
+    
+    .dropdown-icon {
+      color: rgba(255, 255, 255, 0.8);
+      margin-left: 8px;
+      font-size: 20px;
+    }
+  }
+}
+
+::ng-deep .project-menu {
+  .mat-mdc-menu-content {
+    padding: 0;
+    min-width: 320px;
+    max-width: 400px;
+  }
+  
+  .menu-header {
+    padding: 16px 16px 8px;
+    
+    .menu-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #3c4043;
+    }
+  }
+  
+  .project-item {
+    padding: 12px 16px;
+    height: auto;
+    line-height: normal;
+    
+    &.selected {
+      background-color: rgba(26, 115, 232, 0.08);
+    }
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    .project-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+      
+      .project-display-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #3c4043;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+      }
+      
+      .project-full-id {
+        font-size: 12px;
+        color: #5f6368;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+      }
+    }
+    
+    .check-icon {
+      color: #1a73e8;
+      margin-left: 8px;
+    }
+  }
+}
+
