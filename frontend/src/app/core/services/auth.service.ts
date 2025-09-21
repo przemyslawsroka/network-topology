@@ -64,28 +64,24 @@ export class AuthService {
 
   public async signIn(): Promise<void> {
     try {
-      // Generate PKCE challenge
-      const codeVerifier = this.generateRandomString(128);
-      const codeChallenge = await this.sha256(codeVerifier);
+      console.log('AuthService: Starting sign-in process with implicit flow');
       
-      // Store code verifier for later use
-      sessionStorage.setItem('code_verifier', codeVerifier);
-      
-      // Create authorization URL
+      // Use implicit flow for better SPA compatibility
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.set('client_id', this.CLIENT_ID);
       authUrl.searchParams.set('redirect_uri', this.REDIRECT_URI);
-      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('response_type', 'token'); // Use implicit flow
       authUrl.searchParams.set('scope', this.SCOPES.join(' '));
-      authUrl.searchParams.set('code_challenge', codeChallenge);
-      authUrl.searchParams.set('code_challenge_method', 'S256');
       authUrl.searchParams.set('state', this.generateRandomString(16));
-      authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('include_granted_scopes', 'true');
       authUrl.searchParams.set('prompt', 'consent');
 
+      console.log('AuthService: Redirecting to OAuth URL:', authUrl.toString());
+      
       // Redirect to Google OAuth
       window.location.href = authUrl.toString();
     } catch (error) {
+      console.error('AuthService: Failed to initiate authentication:', error);
       throw new Error('Failed to initiate authentication');
     }
   }
@@ -167,19 +163,24 @@ export class AuthService {
     console.log('Exchanging code for token...');
     
     try {
+      // For public OAuth clients (SPA), we don't include client_secret
+      const tokenParams = new URLSearchParams({
+        client_id: this.CLIENT_ID,
+        code: code,
+        code_verifier: codeVerifier,
+        grant_type: 'authorization_code',
+        redirect_uri: this.REDIRECT_URI,
+      });
+
+      console.log('Token exchange request params:', Object.fromEntries(tokenParams));
+
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         mode: 'cors',
-        body: new URLSearchParams({
-          client_id: this.CLIENT_ID,
-          code: code,
-          code_verifier: codeVerifier,
-          grant_type: 'authorization_code',
-          redirect_uri: this.REDIRECT_URI,
-        }),
+        body: tokenParams,
       });
 
       console.log('Token response status:', tokenResponse.status);
@@ -188,9 +189,10 @@ export class AuthService {
         const errorText = await tokenResponse.text();
         console.error('Token exchange error:', errorText);
         
-        // If CORS error, fall back to implicit flow
-        if (tokenResponse.status === 0 || errorText.includes('CORS')) {
-          console.log('CORS error detected, falling back to implicit flow...');
+        // If CORS error or client_secret error, fall back to implicit flow
+        if (tokenResponse.status === 0 || errorText.includes('CORS') || 
+            errorText.includes('client_secret') || tokenResponse.status === 400) {
+          console.log('OAuth error detected (CORS or client_secret), falling back to implicit flow...');
           await this.fallbackToImplicitFlow();
           return;
         }
@@ -209,9 +211,17 @@ export class AuthService {
     } catch (error) {
       console.error('Exchange code error:', error);
       
-      // If it's a network error (likely CORS), fall back to implicit flow
+      // If it's a network error or other OAuth error, fall back to implicit flow
       if (error instanceof TypeError && error.message.includes('fetch')) {
         console.log('Network error detected (likely CORS), falling back to implicit flow...');
+        await this.fallbackToImplicitFlow();
+        return;
+      }
+      
+      // For any OAuth configuration issues, try implicit flow
+      if (error.message && (error.message.includes('client_secret') || 
+                           error.message.includes('invalid_request'))) {
+        console.log('OAuth configuration error, falling back to implicit flow...');
         await this.fallbackToImplicitFlow();
         return;
       }
@@ -397,8 +407,11 @@ export class AuthService {
 
   private async forceHandleAuthCallback(): Promise<void> {
     console.log('AuthService: Force handling auth callback');
+    console.log('Current URL:', window.location.href);
+    console.log('Hash:', window.location.hash);
+    console.log('Search:', window.location.search);
     
-    // Check for implicit flow (hash parameters)
+    // Check for implicit flow (hash parameters) - prioritize this
     if (window.location.hash) {
       console.log('Handling implicit flow callback...');
       await this.handleImplicitFlowCallback();
@@ -414,7 +427,10 @@ export class AuthService {
 
     if (error) {
       console.error('OAuth error:', error);
-      throw new Error(`OAuth error: ${error}`);
+      // If authorization code flow failed, try implicit flow
+      console.log('Authorization code flow failed, trying implicit flow fallback...');
+      await this.fallbackToImplicitFlow();
+      return;
     }
 
     if (code) {
@@ -424,10 +440,14 @@ export class AuthService {
         console.log('Token exchange successful');
       } catch (error) {
         console.error('Token exchange failed:', error);
-        throw error;
+        // Fallback to implicit flow on any error
+        console.log('Code exchange failed, trying implicit flow fallback...');
+        await this.fallbackToImplicitFlow();
+        return;
       }
     } else {
-      throw new Error('No authorization code found in callback');
+      console.log('No authorization code or hash found, trying implicit flow...');
+      await this.fallbackToImplicitFlow();
     }
   }
 }

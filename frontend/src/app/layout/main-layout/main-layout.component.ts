@@ -51,6 +51,13 @@ export class MainLayoutComponent implements OnInit {
     this.isAuthenticated$.subscribe(isAuth => {
       console.log('MainLayoutComponent: Is authenticated:', isAuth);
     });
+
+    // Force clear old problematic auth data if it exists
+    const token = localStorage.getItem('gcp_auth_token');
+    if (token && token.startsWith('dummy_token_')) {
+      console.log('MainLayoutComponent: Detected old dummy token, clearing...');
+      this.authService.forceReAuthentication();
+    }
   }
 
   toggleSidenav(): void {

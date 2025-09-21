@@ -21,10 +21,8 @@ export class AuthGuard implements CanActivate {
         console.log('AuthGuard: Current URL:', window.location.href);
         
         if (!isAuthenticated) {
-          console.log('AuthGuard: Not authenticated, redirecting to login in 2 seconds...');
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 2000);
+          console.log('AuthGuard: Not authenticated, redirecting to login');
+          this.router.navigate(['/login']);
           return false;
         }
         console.log('AuthGuard: Authenticated, allowing access');
