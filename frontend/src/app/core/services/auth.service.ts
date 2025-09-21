@@ -289,6 +289,7 @@ export class AuthService {
   private storeAuthData(token: string): void {
     localStorage.setItem('gcp_auth_token', token);
     localStorage.setItem('gcp_auth_timestamp', Date.now().toString());
+    localStorage.setItem('gcp_auth_scopes', this.SCOPES.sort().join(' '));
     const currentUser = this.getCurrentUser();
     if (currentUser) {
       localStorage.setItem('gcp_user_data', JSON.stringify(currentUser));
@@ -299,12 +300,28 @@ export class AuthService {
     localStorage.removeItem('gcp_auth_token');
     localStorage.removeItem('gcp_auth_timestamp');
     localStorage.removeItem('gcp_user_data');
+    localStorage.removeItem('gcp_auth_scopes');
   }
 
   private checkExistingAuth(): void {
     const token = localStorage.getItem('gcp_auth_token');
     const timestamp = localStorage.getItem('gcp_auth_timestamp');
     const userData = localStorage.getItem('gcp_user_data');
+    const storedScopes = localStorage.getItem('gcp_auth_scopes');
+
+    console.log('AuthService: Checking existing auth...', { 
+      hasToken: !!token, 
+      hasUserData: !!userData,
+      storedScopes 
+    });
+
+    // Check if scopes have changed (need re-authentication for new scopes)
+    const currentScopes = this.SCOPES.sort().join(' ');
+    if (storedScopes !== currentScopes) {
+      console.log('AuthService: Scopes changed, clearing auth data for re-authentication');
+      this.clearAuthData();
+      return;
+    }
 
     if (token && timestamp && userData) {
       const authTime = parseInt(timestamp);
@@ -315,13 +332,18 @@ export class AuthService {
       if (now - authTime < oneHour) {
         try {
           const user = JSON.parse(userData);
+          console.log('AuthService: Restored existing authentication for user:', user.email);
           this.setCurrentUser(user);
         } catch (error) {
+          console.error('AuthService: Error parsing stored user data:', error);
           this.clearAuthData();
         }
       } else {
+        console.log('AuthService: Token expired, clearing auth data');
         this.clearAuthData();
       }
+    } else {
+      console.log('AuthService: No existing authentication found');
     }
   }
 
@@ -335,6 +357,23 @@ export class AuthService {
 
   public getAuthToken(): string | null {
     return localStorage.getItem('gcp_auth_token');
+  }
+
+  public forceReAuthentication(): void {
+    console.log('AuthService: Forcing re-authentication...');
+    this.clearAuthData();
+    this.setCurrentUser(null);
+  }
+
+  public async processAuthCallback(): Promise<boolean> {
+    console.log('AuthService: Processing auth callback...');
+    try {
+      await this.handleAuthCallback();
+      return this.isAuthenticated();
+    } catch (error) {
+      console.error('AuthService: Auth callback processing failed:', error);
+      return false;
+    }
   }
 }
 

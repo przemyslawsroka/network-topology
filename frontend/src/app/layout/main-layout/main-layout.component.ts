@@ -43,7 +43,15 @@ export class MainLayoutComponent implements OnInit {
     this.isAuthenticated$ = this.authService.isAuthenticated$;
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Debug authentication state
+    this.currentUser$.subscribe(user => {
+      console.log('MainLayoutComponent: Current user:', user);
+    });
+    this.isAuthenticated$.subscribe(isAuth => {
+      console.log('MainLayoutComponent: Is authenticated:', isAuth);
+    });
+  }
 
   toggleSidenav(): void {
     this.sidenavOpened = !this.sidenavOpened;

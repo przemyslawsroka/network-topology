@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-simple-callback',
@@ -22,10 +23,10 @@ import { Router } from '@angular/router';
 export class SimpleCallbackComponent implements OnInit {
   debugInfo = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
-  ngOnInit(): void {
-    console.log('SimpleCallbackComponent initialized');
+  async ngOnInit(): Promise<void> {
+    console.log('SimpleCallbackComponent initialized - processing real OAuth callback');
     
     this.debugInfo = JSON.stringify({
       url: window.location.href,
@@ -39,27 +40,26 @@ export class SimpleCallbackComponent implements OnInit {
 
     console.log('Debug info:', this.debugInfo);
 
-    // Store minimal auth data to simulate successful login
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    
-    if (code) {
-      // Store dummy auth data
-      localStorage.setItem('gcp_auth_token', 'dummy_token_' + Date.now());
-      localStorage.setItem('gcp_auth_timestamp', Date.now().toString());
-      localStorage.setItem('gcp_user_data', JSON.stringify({
-        id: 'dummy_user',
-        email: 'user@example.com',
-        name: 'Test User',
-        picture: ''
-      }));
-      console.log('Stored dummy auth data');
+    try {
+      // Process the OAuth callback using the real AuthService
+      const success = await this.authService.processAuthCallback();
+      
+      if (success) {
+        console.log('Authentication successful, redirecting to network topology...');
+        setTimeout(() => {
+          this.router.navigate(['/network-topology']);
+        }, 1000);
+      } else {
+        console.log('Authentication failed, redirecting to login...');
+        setTimeout(() => {
+          this.router.navigate(['/login'], { queryParams: { error: 'auth_failed' } });
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('OAuth callback processing error:', error);
+      setTimeout(() => {
+        this.router.navigate(['/login'], { queryParams: { error: 'callback_error' } });
+      }, 1000);
     }
-
-    // Simple redirect after 3 seconds
-    setTimeout(() => {
-      console.log('Redirecting to network topology...');
-      this.router.navigate(['/network-topology']);
-    }, 3000);
   }
 }
