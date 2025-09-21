@@ -62,7 +62,17 @@ export class GcpMonitoringService {
     const projectId = this.authService.getProjectId();
     const accessToken = this.authService.getAccessToken();
 
+    console.log('GCP Monitoring API Call:', {
+      projectId,
+      hasToken: !!accessToken,
+      tokenLength: accessToken?.length,
+      metricFilter,
+      startTime,
+      endTime
+    });
+
     if (!accessToken) {
+      console.error('No access token available for GCP Monitoring API');
       return throwError(() => new Error('No access token available. Please authenticate first.'));
     }
 

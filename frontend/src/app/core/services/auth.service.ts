@@ -16,6 +16,7 @@ export class AuthService {
   private readonly CLIENT_ID = environment.googleClientId;
   private readonly SCOPES = [
     'https://www.googleapis.com/auth/cloud-platform.read-only',
+    'https://www.googleapis.com/auth/monitoring.read',
     'https://www.googleapis.com/auth/compute.readonly',
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email'

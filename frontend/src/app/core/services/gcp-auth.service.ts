@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/app.config';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,32 +13,35 @@ export class GcpAuthService {
   private projectIdSubject = new BehaviorSubject<string>('your-project-id');
   public projectId$ = this.projectIdSubject.asObservable();
 
-  constructor() { 
-    // In a real application, you would implement OAuth 2.0 flow here
-    // For demo purposes, we'll use environment variables or configuration
+  constructor(private authService: AuthService) { 
+    // Use the real OAuth token from the main AuthService
     this.loadConfiguration();
+    
+    // Subscribe to authentication changes
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (isAuth) {
+        const token = this.authService.getAuthToken();
+        this.accessTokenSubject.next(token);
+      } else {
+        this.accessTokenSubject.next(null);
+      }
+    });
   }
 
   private loadConfiguration(): void {
-    // In a real application, these would come from:
-    // 1. OAuth 2.0 authentication flow
-    // 2. Environment variables
-    // 3. Configuration files
-    // 4. Service account key
-    
+    // Get project ID from configuration
     const projectId = APP_CONFIG.gcp.projectId;
+    this.projectIdSubject.next(projectId);
     
-    if (APP_CONFIG.gcp.mockMode) {
-      // In mock mode, use a fake token for demonstration
-      const accessToken = 'demo-access-token';
-      this.accessTokenSubject.next(accessToken);
+    // Get the real OAuth token if user is already authenticated
+    if (this.authService.isAuthenticated()) {
+      const token = this.authService.getAuthToken();
+      console.log('GcpAuthService: Using real OAuth token from AuthService');
+      this.accessTokenSubject.next(token);
     } else {
-      // In real mode, you would implement OAuth 2.0 flow here
-      // For now, set to null to trigger authentication flow
+      console.log('GcpAuthService: No authentication found, setting token to null');
       this.accessTokenSubject.next(null);
     }
-    
-    this.projectIdSubject.next(projectId);
   }
 
   getAccessToken(): string | null {

@@ -16,9 +16,9 @@ export interface AppConfig {
 export const APP_CONFIG: AppConfig = {
   production: false,
   gcp: {
-    projectId: 'demo-network-topology-project', // Replace with your actual project ID
+    projectId: 'przemekasroka-joonix-service', // Real project ID from OAuth client
     useRealApi: true, // Set to true to use real GCP Monitoring API
-    mockMode: true // Set to false when you have proper authentication
+    mockMode: false // Set to false to use real authentication
   },
   monitoring: {
     defaultTimeRange: 5, // 5 minutes
