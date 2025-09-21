@@ -1,0 +1,132 @@
+<div class="flow-logs-documentation-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>VPC Flow Logs Documentation</mat-card-title>
+      <mat-card-subtitle>Schema and Node Resources</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      
+      <h2>VPC Flow Log Record Schema</h2>
+      <p>
+        VPC Flow Logs record network flows sent from and received by VM instances. The following table describes the fields in a flow log record.
+      </p>
+
+      <table class="mat-table">
+        <tr class="mat-header-row">
+          <th class="mat-header-cell">Field</th>
+          <th class="mat-header-cell">Description</th>
+          <th class="mat-header-cell">Type</th>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell"><code>connection</code></td>
+          <td class="mat-cell">5-tuple describing the flow (source/destination IP, port, protocol).</td>
+          <td class="mat-cell">IpConnection</td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell"><code>reporter</code></td>
+          <td class="mat-cell">The side that reported the flow (SRC or DEST).</td>
+          <td class="mat-cell">string</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>rtt_msec</code></td>
+            <td class="mat-cell">Latency measured during the time interval.</td>
+            <td class="mat-cell">int64</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>bytes_sent</code></td>
+            <td class="mat-cell">Amount of bytes sent from source to destination.</td>
+            <td class="mat-cell">int64</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>packets_sent</code></td>
+            <td class="mat-cell">Number of packets sent from source to destination.</td>
+            <td class="mat-cell">int64</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>start_time</code></td>
+            <td class="mat-cell">Timestamp of the first observed packet.</td>
+            <td class="mat-cell">string</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>end_time</code></td>
+            <td class="mat-cell">Timestamp of the last observed packet.</td>
+            <td class="mat-cell">string</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>src_instance</code></td>
+            <td class="mat-cell">Details about the source VM instance.</td>
+            <td class="mat-cell">InstanceDetails</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>dest_instance</code></td>
+            <td class="mat-cell">Details about the destination VM instance.</td>
+            <td class="mat-cell">InstanceDetails</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>src_vpc</code></td>
+            <td class="mat-cell">Details about the source VPC network.</td>
+            <td class="mat-cell">VpcDetails</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell"><code>dest_vpc</code></td>
+            <td class="mat-cell">Details about the destination VPC network.</td>
+            <td class="mat-cell">VpcDetails</td>
+        </tr>
+      </table>
+
+      <h2>Graph Node Resources</h2>
+      <p>
+        The following resources can be represented as nodes on the network topology graph, based on the information available in VPC Flow Logs.
+      </p>
+
+      <table class="mat-table">
+        <tr class="mat-header-row">
+          <th class="mat-header-cell">Resource Type</th>
+          <th class="mat-header-cell">Source Field</th>
+          <th class="mat-header-cell">Description</th>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell"><code>src_instance</code>, <code>dest_instance</code></td>
+          <td class="mat-cell">A virtual machine instance in Google Compute Engine.</td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VPC Network</td>
+          <td class="mat-cell"><code>src_vpc</code>, <code>dest_vpc</code></td>
+          <td class="mat-cell">A Virtual Private Cloud network.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">Subnetwork</td>
+            <td class="mat-cell"><code>src_vpc.subnetwork_name</code>, <code>dest_vpc.subnetwork_name</code></td>
+            <td class="mat-cell">A subnetwork within a VPC network.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">GKE Cluster</td>
+            <td class="mat-cell"><code>src_gke_details.cluster</code>, <code>dest_gke_details.cluster</code></td>
+            <td class="mat-cell">A Google Kubernetes Engine cluster.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">GKE Pod</td>
+            <td class="mat-cell"><code>src_gke_details.pod</code>, <code>dest_gke_details.pod</code></td>
+            <td class="mat-cell">A pod within a GKE cluster.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">GKE Service</td>
+            <td class="mat-cell"><code>src_gke_details.service</code>, <code>dest_gke_details.service</code></td>
+            <td class="mat-cell">A service within a GKE cluster.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">Region</td>
+            <td class="mat-cell"><code>src_instance.region</code>, <code>dest_instance.region</code></td>
+            <td class="mat-cell">The geographic region of a resource.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">Zone</td>
+            <td class="mat-cell"><code>src_instance.zone</code>, <code>dest_instance.zone</code></td>
+            <td class="mat-cell">The zone within a region where a resource is located.</td>
+        </tr>
+      </table>
+
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,196 @@
+<div class="metric-documentation-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Metric Documentation</mat-card-title>
+      <mat-card-subtitle>Key Metrics for Network Topology (GCE and GKE)</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+
+      <h2>Metrics Displayed in Network Topology</h2>
+      <p>
+        The Network Topology tool surfaces various metrics from Cloud Monitoring to provide insights into traffic flow, latency, and packet loss. Below are the types of metrics displayed, along with specific Cloud Monitoring metric names where available.
+      </p>
+
+      <h3>GCE / Infrastructure View Metrics</h3>
+
+      <h4>VM or Regional Entities</h4>
+      <ul>
+        <li>CPU Utilization</li>
+        <li>Memory Usage Percentage</li>
+        <li>Disk Usage Percentage</li>
+        <li>Traffic (for Regions)</li>
+      </ul>
+
+      <h4>Connections (VM Hierarchy)</h4>
+      <h5>VM to VM</h5>
+      <ul>
+        <li><strong>Average hourly throughput:</strong> Based on <code>networking.googleapis.com/vm_flow/egress_bytes_count</code> and <code>networking.googleapis.com/vm_flow/ingress_bytes_count</code>.</li>
+        <li><strong>Latency:</strong> Based on round-trip time (RTT).</li>
+        <li><strong>Packet loss:</strong> (available for regions and zones).</li>
+      </ul>
+
+      <h4>Client to Load Balancing</h4>
+      <h5>External Client to External Application Load Balancer</h5>
+      <ul>
+        <li><strong>Traffic:</strong> Based on <code>loadbalancing.googleapis.com/https/request_bytes_count</code> and <code>loadbalancing.googleapis.com/https/response_bytes_count</code>.</li>
+        <li><strong>Latency:</strong> Based on Frontend RTT (<code>loadbalancing.googleapis.com/https/frontend_tcp_rtt</code>).</li>
+        <li><strong>Request count:</strong> <code>loadbalancing.googleapis.com/https/request_count</code>.</li>
+        <li>HTTP error responses.</li>
+      </ul>
+
+      <h5>External Client to External Proxy Network Load Balancer</h5>
+      <ul>
+        <li><strong>Traffic:</strong> <code>loadbalancing.googleapis.com/tcp_ssl_proxy/egress_bytes_count</code> and <code>loadbalancing.googleapis.com/tcp_ssl_proxy/ingress_bytes_count</code>.</li>
+        <li><strong>Latency:</strong> Based on Frontend RTT.</li>
+        <li><strong>Open connections:</strong> <code>loadbalancing.googleapis.com/tcp_ssl_proxy/open_connections</code>.</li>
+        <li>New/Closed connections per second.</li>
+      </ul>
+
+      <h5>External Client to External Passthrough Network Load Balancer</h5>
+      <ul>
+        <li><strong>Traffic:</strong> <code>loadbalancing.googleapis.com/l3/external/egress_bytes_count</code> and <code>loadbalancing.googleapis.com/l3/external/ingress_bytes_count</code>.</li>
+      </ul>
+
+      <h4>Load Balancing to Backends</h4>
+      <h5>External Application Load Balancer to Backend</h5>
+      <ul>
+        <li><strong>Traffic:</strong> <code>loadbalancing.googleapis.com/https/backend_request_bytes_count</code> and <code>loadbalancing.googleapis.com/https/backend_response_bytes_count</code>.</li>
+        <li><strong>Latency:</strong> <code>loadbalancing.googleapis.com/https/backend_latencies</code>.</li>
+        <li><strong>Request Count:</strong> <code>loadbalancing.googleapis.com/https/backend_request_count</code>.</li>
+      </ul>
+
+      <h5>Internal Passthrough Network Load Balancer to Backend</h5>
+      <ul>
+        <li><strong>Traffic:</strong> <code>loadbalancing.googleapis.com/l3/internal/egress_bytes_count</code> and <code>loadbalancing.googleapis.com/l3/internal/ingress_bytes_count</code>.</li>
+      </ul>
+
+      <h4>Hybrid Connectivity</h4>
+      <h5>VLAN Attachments (Interconnect)</h5>
+      <ul>
+        <li><strong>Traffic:</strong> <code>interconnect.googleapis.com/network/attachment/egress_bytes_count</code> and <code>interconnect.googleapis.com/network/attachment/ingress_bytes_count</code>.</li>
+        <li><strong>VM to VLAN:</strong> <code>networking.googleapis.com/interconnect_attachment/vm/egress_bytes_count</code> and <code>networking.googleapis.com/interconnect_attachment/vm/ingress_bytes_count</code>.</li>
+      </ul>
+
+      <h5>VPN Tunnels</h5>
+      <ul>
+        <li><strong>Traffic:</strong> <code>vpn.googleapis.com/network/egress_bytes_count</code> and <code>vpn.googleapis.com/network/ingress_bytes_count</code>.</li>
+        <li><strong>VM to VPN:</strong> <code>networking.googleapis.com/vpn_tunnel/vm/egress_bytes_count</code> and <code>networking.googleapis.com/vpn_tunnel/vm/ingress_bytes_count</code>.</li>
+      </ul>
+
+      <h5>Router Appliance</h5>
+      <ul>
+        <li><strong>VPC to On-premises:</strong> <code>routerappliance.googleapis.com/gateway/egress_bytes_count</code> and <code>routerappliance.googleapis.com/gateway/ingress_bytes_count</code>.</li>
+        <li><strong>VM to Router Appliance:</strong> <code>routerappliance.googleapis.com/vm/egress_bytes_count</code> and <code>routerappliance.googleapis.com/vm/ingress_bytes_count</code>.</li>
+      </ul>
+
+      <h4>Client to Google Services</h4>
+      <ul>
+        <li><strong>Traffic:</strong> <code>networking.googleapis.com/google_service/request_bytes_count</code> and <code>networking.googleapis.com/google_service/response_bytes_count</code>.</li>
+      </ul>
+
+      <mat-divider></mat-divider>
+
+      <h2>GKE Topology</h2>
+      <p>
+        The networking metrics for the GKE Enterprise view are primarily provided by the Cloud Latency pipeline, sampled at the USPS level.
+      </p>
+      <p>
+        Here are the key Cloud Monitoring metrics used for different entities within the GKE Enterprise Topology view:
+      </p>
+
+      <h4>GKE Pod, Workload, Namespace</h4>
+      <ul>
+        <li><strong>Monitored Resource:</strong> <code>k8s_pod</code></li>
+        <li><strong>Average Throughput Egress:</strong> <code>networking.googleapis.com/pod_flow/egress_bytes_count</code></li>
+        <li><strong>Average Throughput Ingress:</strong> <code>networking.googleapis.com/pod_flow/ingress_bytes_count</code></li>
+        <li><strong>Median Latency (RTT):</strong> <code>networking.googleapis.com/pod_flow/rtt</code></li>
+      </ul>
+      <p>
+        <em>Note: For Workloads and Namespaces, these <code>pod_flow</code> metrics are aggregated using resource labels like <code>metadata.system_labels.top_level_controller_name</code> for workloads and <code>resource.label.namespace_name</code> for namespaces.</em>
+      </p>
+
+      <h4>GKE Node, Node Pool, Cluster</h4>
+      <ul>
+        <li><strong>Monitored Resource:</strong> <code>k8s_node</code></li>
+        <li><strong>Average Throughput Egress:</strong> <code>networking.googleapis.com/node_flow/egress_bytes_count</code></li>
+        <li><strong>Average Throughput Ingress:</strong> <code>networking.googleapis.com/node_flow/ingress_bytes_count</code></li>
+        <li><strong>Median Latency (RTT):</strong> <code>networking.googleapis.com/node_flow/rtt</code></li>
+      </ul>
+      <p>
+        <em>Note: For Clusters and Node Pools, these <code>node_flow</code> metrics are aggregated using relevant resource labels like <code>resource.label.cluster_name</code> or <code>metadata.user_labels."cloud.google.com/gke-nodepool"</code>.</em>
+      </p>
+
+      <h3>Key Takeaway</h3>
+      <p>
+        The GKE Enterprise view in Network Topology leverages the <code>networking.googleapis.com/pod_flow/*</code> and <code>networking.googleapis.com/node_flow/*</code> metrics from Cloud Latency to visualize network traffic throughput and round-trip time latency between GKE entities, offering a more granular view of network performance than standard resource metrics.
+      </p>
+
+      <mat-divider></mat-divider>
+
+      <h2>GCE / Infrastructure View Edge Types</h2>
+      <table class="mat-table">
+        <tr class="mat-header-row">
+          <th class="mat-header-cell">Edge Type</th>
+          <th class="mat-header-cell">Source Entity</th>
+          <th class="mat-header-cell">Destination Entity</th>
+          <th class="mat-header-cell">Core Metric(s)</th>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM to VM</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell"><code>networking.googleapis.com/vm_flow/egress_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM to Zone</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell">Zone</td>
+          <td class="mat-cell"><code>networking.googleapis.com/vm_flow/egress_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM to Region</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell">Region</td>
+          <td class="mat-cell"><code>networking.googleapis.com/vm_flow/egress_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">Zone to Zone</td>
+          <td class="mat-cell">Zone</td>
+          <td class="mat-cell">Zone</td>
+          <td class="mat-cell"><code>networking.googleapis.com/vm_flow/egress_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM to External</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell">Country</td>
+          <td class="mat-cell"><code>networking.googleapis.com/vm_flow/egress_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">External to LB</td>
+          <td class="mat-cell">Country</td>
+          <td class="mat-cell">Load Balancer</td>
+          <td class="mat-cell"><code>loadbalancing.googleapis.com/https/request_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">LB to Backend (VM/IG)</td>
+          <td class="mat-cell">Load Balancer</td>
+          <td class="mat-cell">Instance Group</td>
+          <td class="mat-cell"><code>loadbalancing.googleapis.com/https/backend_request_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM to Interconnect</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell">VLAN Attachment</td>
+          <td class="mat-cell"><code>networking.googleapis.com/interconnect_attachment/vm/egress_bytes_count</code></td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM to VPN</td>
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell">VPN Tunnel</td>
+          <td class="mat-cell"><code>networking.googleapis.com/vpn_tunnel/vm/egress_bytes_count</code></td>
+        </tr>
+      </table>
+
+    </mat-card-content>
+  </mat-card>
+</div>

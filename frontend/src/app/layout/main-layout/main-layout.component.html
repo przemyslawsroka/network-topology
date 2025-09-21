@@ -59,12 +59,51 @@
       
       <nav class="gcp-nav">
         <mat-nav-list class="gcp-nav-list">
+          <!-- Network Topology - Main Dashboard -->
           <mat-list-item 
             routerLink="/network-topology" 
             routerLinkActive="active"
-            class="gcp-nav-item">
+            class="gcp-nav-item network-topology-item">
             <mat-icon matListItemIcon>hub</mat-icon>
             <span matListItemTitle>Network Topology</span>
+          </mat-list-item>
+          
+          <!-- Flow Logs Edge Explorer -->
+          <mat-list-item 
+            routerLink="/flow-logs-edge-explorer" 
+            routerLinkActive="active"
+            class="gcp-nav-item">
+            <mat-icon matListItemIcon>network_check</mat-icon>
+            <span matListItemTitle>Flow Logs Edge Explorer</span>
+          </mat-list-item>
+          
+          <!-- Metric Edge Explorer -->
+          <mat-list-item 
+            routerLink="/metric-edge-explorer" 
+            routerLinkActive="active"
+            class="gcp-nav-item">
+            <mat-icon matListItemIcon>analytics</mat-icon>
+            <span matListItemTitle>Metric Edge Explorer</span>
+          </mat-list-item>
+
+          <mat-divider></mat-divider>
+
+          <!-- Metric Documentation -->
+          <mat-list-item
+            routerLink="/metric-documentation"
+            routerLinkActive="active"
+            class="gcp-nav-item">
+            <mat-icon matListItemIcon>school</mat-icon>
+            <span matListItemTitle>Metric Documentation</span>
+          </mat-list-item>
+
+          <!-- Flow Logs Documentation -->
+          <mat-list-item
+            routerLink="/flow-logs-documentation"
+            routerLinkActive="active"
+            class="gcp-nav-item">
+            <mat-icon matListItemIcon>book</mat-icon>
+            <span matListItemTitle>Flow Logs Documentation</span>
           </mat-list-item>
         </mat-nav-list>
       </nav>
