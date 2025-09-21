@@ -9,6 +9,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../core/services/auth.service';
+import { GcpAuthService, GcpProject } from '../../core/services/gcp-auth.service';
 import { User } from '../../core/models/user.model';
 import { Observable } from 'rxjs';
 import { ProjectPickerComponent } from '../../shared/components/project-picker/project-picker.component';
@@ -38,7 +39,10 @@ export class MainLayoutComponent implements OnInit {
   isAuthenticated$: Observable<boolean>;
   sidenavOpened = true;
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private gcpAuthService: GcpAuthService
+  ) {
     this.currentUser$ = this.authService.currentUser$;
     this.isAuthenticated$ = this.authService.isAuthenticated$;
   }
@@ -58,6 +62,10 @@ export class MainLayoutComponent implements OnInit {
       console.log('MainLayoutComponent: Detected old dummy token, clearing...');
       this.authService.forceReAuthentication();
     }
+  }
+
+  onProjectSelected(project: GcpProject): void {
+    this.gcpAuthService.setProject(project);
   }
 
   toggleSidenav(): void {

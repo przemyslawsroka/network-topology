@@ -30,7 +30,7 @@
     class="project-selector"
     *ngIf="selectedProject && !isLoading && !error">
     <div class="project-info">
-      <span class="project-name">{{ selectedProject.displayName }}</span>
+      <span class="project-name">{{ selectedProject.name }}</span>
       <span class="project-id">{{ selectedProject.id }}</span>
     </div>
     <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>

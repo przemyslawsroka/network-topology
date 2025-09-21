@@ -10,16 +10,31 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { HttpClientModule } from '@angular/common/http';
-import { MetricDataService, Connection } from '../../services/metric-data.service';
+import { MetricDataService, Connection, MetricQueryResult } from '../../services/metric-data.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { GcpMonitoringService } from '../../../../core/services/gcp-monitoring.service';
 
-interface QueryDetails {
+interface QuerySummary {
+  totalLatency: number;
+  totalSuccess: boolean;
+  results: IndividualQueryResult[];
+}
+
+interface IndividualQueryResult {
   metric: string;
-  query: string;
   latency: number;
   success: boolean;
   errorMessage?: string;
+}
+
+export interface GroupedConnection {
+  source: { name: string; type: string };
+  targets: { 
+    target: { name: string; type: string }; 
+    metricValue: string; 
+    metricName: string;
+  }[];
+  granularity: string;
 }
 
 @Component({
@@ -43,13 +58,10 @@ interface QueryDetails {
 })
 export class EdgeExplorerViewComponent implements OnInit {
   
-  connections: Connection[] = [];
-  displayedColumns: string[] = ['source', 'target', 'metricValue'];
+  groupedConnections: GroupedConnection[] = [];
+  displayedColumns: string[] = ['source', 'granularity', 'target', 'metricName', 'metricValue'];
   
-  selectedEdgeType: string = 'all';
-  selectedMetric: string = 'traffic';
-  
-  queryDetails: QueryDetails | null = null;
+  querySummary: QuerySummary | null = null;
   isLoading: boolean = false;
 
   constructor(
@@ -59,53 +71,65 @@ export class EdgeExplorerViewComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.fetchData();
+    // Data will be loaded when a project is selected
   }
 
   fetchData(): void {
     this.isLoading = true;
     const startTime = Date.now();
     
-    this.metricDataService.getMetricData(this.selectedEdgeType, this.selectedMetric)
+    this.metricDataService.getMetricData()
       .subscribe({
-        next: (data: Connection[]) => {
+        next: (results: MetricQueryResult[]) => {
           const endTime = Date.now();
-          this.connections = data;
-          this.queryDetails = {
-            metric: this.getMetricName(),
-            query: this.generateQuery(),
-            latency: endTime - startTime,
-            success: true
+          this.groupedConnections = this.groupConnections(results);
+          
+          this.querySummary = {
+            totalLatency: endTime - startTime,
+            totalSuccess: results.every(r => r.success),
+            results: results.map(r => ({
+              metric: r.metricName,
+              latency: r.latency,
+              success: r.success,
+              errorMessage: r.error
+            }))
           };
           this.isLoading = false;
         },
         error: (error) => {
           const endTime = Date.now();
-          this.queryDetails = {
-            metric: this.getMetricName(),
-            query: this.generateQuery(),
-            latency: endTime - startTime,
-            success: false,
-            errorMessage: error.message || 'Unknown error occurred'
+          this.querySummary = {
+            totalLatency: endTime - startTime,
+            totalSuccess: false,
+            results: []
           };
           this.isLoading = false;
         }
       });
   }
 
-  private getMetricName(): string {
-    const metricMap: { [key: string]: string } = {
-      'traffic': 'networking.googleapis.com/vm_flow/egress_bytes_count',
-      'latency': 'networking.googleapis.com/vm_flow/rtt',
-      'packet_loss': 'networking.googleapis.com/vm_flow/packet_loss'
-    };
-    return metricMap[this.selectedMetric] || this.selectedMetric;
-  }
+  private groupConnections(results: MetricQueryResult[]): GroupedConnection[] {
+    const groupedBySource: { [key: string]: GroupedConnection } = {};
 
-  private generateQuery(): string {
-    const metric = this.getMetricName();
-    const edgeTypeFilter = this.selectedEdgeType !== 'all' ? `{edge_type="${this.selectedEdgeType}"}` : '';
-    return `${metric}${edgeTypeFilter}[5m]`;
+    results.forEach(result => {
+      result.connections.forEach(connection => {
+        const key = `${connection.source.name}-${result.metricName}`;
+        if (!groupedBySource[key]) {
+          groupedBySource[key] = {
+            source: connection.source,
+            targets: [],
+            granularity: result.metricName
+          };
+        }
+        groupedBySource[key].targets.push({
+          target: connection.target,
+          metricValue: connection.metricValue.split(': ')[1], // Extract just the value
+          metricName: connection.metricValue.split(': ')[0]  // Extract just the name
+        });
+      });
+    });
+
+    return Object.values(groupedBySource);
   }
 
   exportData(): void {

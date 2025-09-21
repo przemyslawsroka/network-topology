@@ -3,6 +3,11 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/app.config';
 import { AuthService } from './auth.service';
 
+export interface GcpProject {
+  id: string;
+  name: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -10,7 +15,7 @@ export class GcpAuthService {
   private accessTokenSubject = new BehaviorSubject<string | null>(null);
   public accessToken$ = this.accessTokenSubject.asObservable();
 
-  private projectIdSubject = new BehaviorSubject<string>('your-project-id');
+  private projectIdSubject = new BehaviorSubject<string | null>(null);
   public projectId$ = this.projectIdSubject.asObservable();
 
   constructor(private authService: AuthService) { 
@@ -44,11 +49,16 @@ export class GcpAuthService {
     }
   }
 
+  public setProject(project: GcpProject): void {
+    console.log('GcpAuthService: Setting active project to', project.id);
+    this.projectIdSubject.next(project.id);
+  }
+
   getAccessToken(): string | null {
     return this.accessTokenSubject.value;
   }
 
-  getProjectId(): string {
+  getProjectId(): string | null {
     return this.projectIdSubject.value;
   }
 

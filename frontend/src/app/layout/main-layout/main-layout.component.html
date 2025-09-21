@@ -16,7 +16,7 @@
       </div>
       
       <div class="gcp-project-picker">
-        <app-project-picker></app-project-picker>
+        <app-project-picker (projectSelected)="onProjectSelected($event)"></app-project-picker>
       </div>
       
       <div class="gcp-header-spacer"></div>

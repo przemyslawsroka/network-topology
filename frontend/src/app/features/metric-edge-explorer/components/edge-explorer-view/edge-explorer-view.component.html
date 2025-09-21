@@ -16,26 +16,6 @@
       </mat-card-header>
       <mat-card-content>
         <div class="controls-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Edge Type</mat-label>
-            <mat-select [(value)]="selectedEdgeType">
-              <mat-option value="all">All Types</mat-option>
-              <mat-option value="vm_to_vm">VM to VM</mat-option>
-              <mat-option value="external_to_lb">External to LB</mat-option>
-              <mat-option value="lb_to_backend">LB to Backend</mat-option>
-              <mat-option value="vm_to_vpn">VM to VPN</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Metric</mat-label>
-            <mat-select [(value)]="selectedMetric">
-              <mat-option value="traffic">Traffic</mat-option>
-              <mat-option value="latency">Latency</mat-option>
-              <mat-option value="packet_loss">Packet Loss</mat-option>
-            </mat-select>
-          </mat-form-field>
-
           <div class="action-buttons">
             <button mat-raised-button color="primary" (click)="fetchData()" [disabled]="isLoading">
               <mat-icon>play_arrow</mat-icon>
@@ -47,77 +27,34 @@
             </button>
           </div>
         </div>
-        
-        <!-- Debug Section for Authentication Issues -->
-        <div class="debug-section" *ngIf="queryDetails && !queryDetails.success">
-          <h4>🔧 Debug Authentication</h4>
-          <p class="debug-description">If you're seeing 403 errors, try these debugging steps:</p>
-          <div class="debug-buttons">
-            <button mat-stroked-button color="accent" (click)="debugAuthentication()">
-              <mat-icon>bug_report</mat-icon>
-              Debug Auth State
-            </button>
-            <button mat-raised-button color="warn" (click)="forceReAuthentication()">
-              <mat-icon>refresh</mat-icon>
-              Re-authenticate
-            </button>
-            <button mat-stroked-button color="warn" (click)="clearAuthAndRestart()">
-              <mat-icon>clear_all</mat-icon>
-              Clear All & Restart
-            </button>
-            <button mat-stroked-button color="primary" (click)="debugMetricsAvailability()">
-              <mat-icon>search</mat-icon>
-              Debug Metrics
-            </button>
-          </div>
-          <p class="debug-note">
-            <mat-icon>info</mat-icon>
-            <strong>Note:</strong> After updating OAuth scopes, you need to re-authenticate to get a token with the new permissions.
-          </p>
-        </div>
       </mat-card-content>
     </mat-card>
   </div>
 
   <!-- Query Details Panel -->
-  <div class="query-details-section" *ngIf="queryDetails">
-    <mat-expansion-panel>
+  <div class="query-details-section" *ngIf="querySummary">
+    <mat-expansion-panel [expanded]="true">
       <mat-expansion-panel-header>
         <mat-panel-title>
           <mat-icon>info</mat-icon>
           Query Details
         </mat-panel-title>
         <mat-panel-description>
-          <span [ngClass]="queryDetails.success ? 'status-success' : 'status-error'">
-            {{ queryDetails.success ? 'Success' : 'Error' }}
+          <span [ngClass]="querySummary.totalSuccess ? 'status-success' : 'status-error'">
+            {{ querySummary.totalSuccess ? 'All Succeeded' : 'Some Failed' }}
           </span>
-          - {{ queryDetails.latency }}ms
+          - Total Time: {{ querySummary.totalLatency }}ms
         </mat-panel-description>
       </mat-expansion-panel-header>
       
       <div class="query-details-content">
-        <div class="detail-row">
-          <strong>Metric:</strong>
-          <code>{{ queryDetails.metric }}</code>
-        </div>
-        <div class="detail-row">
-          <strong>Query:</strong>
-          <code>{{ queryDetails.query }}</code>
-        </div>
-        <div class="detail-row">
-          <strong>Latency:</strong>
-          <span>{{ queryDetails.latency }}ms</span>
-        </div>
-        <div class="detail-row">
-          <strong>Status:</strong>
-          <span [ngClass]="queryDetails.success ? 'status-success' : 'status-error'">
-            <mat-icon>{{ queryDetails.success ? 'check_circle' : 'error' }}</mat-icon>
-            {{ queryDetails.success ? 'Success' : 'Error' }}
-          </span>
-        </div>
-        <div class="detail-row" *ngIf="!queryDetails.success && queryDetails.errorMessage">
-          <strong>Error Message:</strong>
-          <span class="error-message">{{ queryDetails.errorMessage }}</span>
+        <div *ngFor="let result of querySummary.results" class="detail-row metric-result">
+          <mat-icon [ngClass]="result.success ? 'status-success' : 'status-error'">
+            {{ result.success ? 'check_circle' : 'error' }}
+          </mat-icon>
+          <span class="metric-name">{{ result.metric }}</span>
+          <span class="latency">({{ result.latency }}ms)</span>
+          <span *ngIf="!result.success" class="error-message">{{ result.errorMessage }}</span>
         </div>
       </div>
     </mat-expansion-panel>
@@ -135,30 +72,63 @@
         </mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <table mat-table [dataSource]="connections" class="edges-table">
+        <table mat-table [dataSource]="groupedConnections" class="edges-table">
+          <!-- Source Column -->
           <ng-container matColumnDef="source">
             <th mat-header-cell *matHeaderCellDef>Source</th>
-            <td mat-cell *matCellDef="let connection">
-              <div class="node-cell">
+            <td mat-cell *matCellDef="let group">
+              <div class="node-cell source-cell">
                 <mat-icon class="node-icon">device_hub</mat-icon>
-                {{ connection.source }}
+                <div>
+                  <strong>{{ group.source.name }}</strong>
+                  <div class="resource-type">{{ group.source.type }}</div>
+                </div>
               </div>
             </td>
           </ng-container>
 
+          <!-- Granularity Column -->
+          <ng-container matColumnDef="granularity">
+            <th mat-header-cell *matHeaderCellDef>Granularity</th>
+            <td mat-cell *matCellDef="let group">
+              <div class="granularity-cell">
+                {{ group.granularity }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Target Column -->
           <ng-container matColumnDef="target">
             <th mat-header-cell *matHeaderCellDef>Target</th>
-            <td mat-cell *matCellDef="let connection">
-              <div class="node-cell">
-                <mat-icon class="node-icon">device_hub</mat-icon>
-                {{ connection.target }}
+            <td mat-cell *matCellDef="let group">
+              <div *ngFor="let item of group.targets" class="target-row">
+                <mat-icon class="node-icon">arrow_forward</mat-icon>
+                <div>
+                  {{ item.target.name }}
+                  <div class="resource-type">{{ item.target.type }}</div>
+                </div>
               </div>
             </td>
           </ng-container>
 
+          <!-- Metric Name Column -->
+          <ng-container matColumnDef="metricName">
+            <th mat-header-cell *matHeaderCellDef>Metric</th>
+            <td mat-cell *matCellDef="let group">
+              <div *ngFor="let item of group.targets" class="target-row">
+                {{ item.metricName }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Metric Value Column -->
           <ng-container matColumnDef="metricValue">
             <th mat-header-cell *matHeaderCellDef>Metric Value</th>
-            <td mat-cell *matCellDef="let connection">{{ connection.metricValue }}</td>
+            <td mat-cell *matCellDef="let group">
+              <div *ngFor="let item of group.targets" class="target-row">
+                {{ item.metricValue }}
+              </div>
+            </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap, take } from 'rxjs/operators';
 import { GcpAuthService } from './gcp-auth.service';
 import { AuthService } from './auth.service';
 
@@ -54,65 +54,73 @@ export class GcpMonitoringService {
     endTime: string,
     aggregation?: any
   ): Observable<MonitoringApiResponse> {
-    const projectId = this.authService.getProjectId();
-    const accessToken = this.authService.getAccessToken();
+    return this.authService.projectId$.pipe(
+      take(1), // Ensure the observable completes after getting the project ID
+      switchMap(projectId => {
+        if (!projectId) {
+          return throwError(() => new Error('No project selected.'));
+        }
+        
+        const accessToken = this.authService.getAccessToken();
 
-    if (!accessToken) {
-      console.error('No OAuth2 access token available. Please authenticate first.');
-      return throwError(() => new Error('No access token available. Please authenticate first.'));
-    }
-
-    const url = `${this.baseUrl}/projects/${projectId}/timeSeries`;
+        if (!accessToken) {
+          console.error('No OAuth2 access token available. Please authenticate first.');
+          return throwError(() => new Error('No access token available. Please authenticate first.'));
+        }
     
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    });
-
-    let params = new HttpParams()
-      .set('filter', metricFilter)
-      .set('interval.startTime', startTime)
-      .set('interval.endTime', endTime)
-      .set('view', 'FULL');
-
-    if (aggregation) {
-      if (aggregation.alignmentPeriod) {
-        params = params.set('aggregation.alignmentPeriod', aggregation.alignmentPeriod);
-      }
-      if (aggregation.perSeriesAligner) {
-        params = params.set('aggregation.perSeriesAligner', aggregation.perSeriesAligner);
-      }
-      if (aggregation.crossSeriesReducer) {
-        params = params.set('aggregation.crossSeriesReducer', aggregation.crossSeriesReducer);
-      }
-      if (aggregation.groupByFields) {
-        aggregation.groupByFields.forEach((field: string) => {
-          params = params.append('aggregation.groupByFields', field);
+        const url = `${this.baseUrl}/projects/${projectId}/timeSeries`;
+        
+        const headers = new HttpHeaders({
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         });
-      }
-    }
-
-    return this.http.get<MonitoringApiResponse>(url, { headers, params })
-      .pipe(
-        catchError(error => {
-          console.error('GCP Monitoring API Error:', error);
-          
-          let errorMessage = 'Failed to fetch data from GCP Monitoring API';
-          
-          if (error.status === 401) {
-            errorMessage = 'Authentication failed. Your session may have expired.';
-            this.mainAuthService.forceReAuthentication();
-          } else if (error.status === 403) {
-            errorMessage = `Permission denied for project ${projectId}. Ensure your account has the 'monitoring.read' scope and necessary IAM permissions.`;
-            console.log('Forcing re-authentication to allow user to grant correct scopes.');
-            this.mainAuthService.forceReAuthentication();
-          } else if (error.error?.error?.message) {
-            errorMessage = error.error.error.message;
+    
+        let params = new HttpParams()
+          .set('filter', metricFilter)
+          .set('interval.startTime', startTime)
+          .set('interval.endTime', endTime)
+          .set('view', 'FULL');
+    
+        if (aggregation) {
+          if (aggregation.alignmentPeriod) {
+            params = params.set('aggregation.alignmentPeriod', aggregation.alignmentPeriod);
           }
-          
-          return throwError(() => new Error(errorMessage));
-        })
-      );
+          if (aggregation.perSeriesAligner) {
+            params = params.set('aggregation.perSeriesAligner', aggregation.perSeriesAligner);
+          }
+          if (aggregation.crossSeriesReducer) {
+            params = params.set('aggregation.crossSeriesReducer', aggregation.crossSeriesReducer);
+          }
+          if (aggregation.groupByFields) {
+            aggregation.groupByFields.forEach((field: string) => {
+              params = params.append('aggregation.groupByFields', field);
+            });
+          }
+        }
+    
+        return this.http.get<MonitoringApiResponse>(url, { headers, params })
+          .pipe(
+            catchError(error => {
+              console.error('GCP Monitoring API Error:', error);
+              
+              let errorMessage = 'Failed to fetch data from GCP Monitoring API';
+              
+              if (error.status === 401) {
+                errorMessage = 'Authentication failed. Your session may have expired.';
+                this.mainAuthService.forceReAuthentication();
+              } else if (error.status === 403) {
+                errorMessage = `Permission denied for project ${projectId}. Ensure your account has the 'monitoring.read' scope and necessary IAM permissions.`;
+                console.log('Forcing re-authentication to allow user to grant correct scopes.');
+                this.mainAuthService.forceReAuthentication();
+              } else if (error.error?.error?.message) {
+                errorMessage = error.error.error.message;
+              }
+              
+              return throwError(() => new Error(errorMessage));
+            })
+          );
+      })
+    );
   }
 
   debugAuthAndProject(): void {

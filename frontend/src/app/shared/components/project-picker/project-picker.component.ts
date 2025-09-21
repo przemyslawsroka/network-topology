@@ -7,13 +7,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
-import { GcpResourceManagerService, GcpProject } from '../../../core/services/gcp-resource-manager.service';
-
-export interface ProjectPickerProject {
-  id: string;
-  name: string;
-  displayName: string;
-}
+import { GcpResourceManagerService, GcpProject as ApiGcpProject } from '../../../core/services/gcp-resource-manager.service';
+import { GcpProject } from '../../../core/services/gcp-auth.service';
 
 @Component({
   selector: 'app-project-picker',
@@ -31,10 +26,10 @@ export interface ProjectPickerProject {
   styleUrls: ['./project-picker.component.scss']
 })
 export class ProjectPickerComponent implements OnInit, OnDestroy {
-  @Output() projectSelected = new EventEmitter<ProjectPickerProject>();
+  @Output() projectSelected = new EventEmitter<GcpProject>();
   
-  selectedProject: ProjectPickerProject | null = null;
-  projects: ProjectPickerProject[] = [];
+  selectedProject: GcpProject | null = null;
+  projects: GcpProject[] = [];
   isLoading = false;
   error: string | null = null;
   private destroy$ = new Subject<void>();
@@ -63,22 +58,25 @@ export class ProjectPickerComponent implements OnInit, OnDestroy {
     this.gcpResourceManagerService.getAllProjects(filter)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (gcpProjects: GcpProject[]) => {
+        next: (gcpProjects: ApiGcpProject[]) => {
           console.log('Fetched GCP projects:', gcpProjects);
           
           // Transform GCP projects to the format expected by the UI
           this.projects = gcpProjects.map(gcpProject => ({
             id: gcpProject.projectId,
-            name: gcpProject.name || gcpProject.projectId,
-            displayName: gcpProject.name || gcpProject.projectId
+            name: gcpProject.name || gcpProject.projectId
           }));
 
-          // Set default selected project (first one if available)
-          if (this.projects.length > 0 && !this.selectedProject) {
+          // Set default selected project
+          const defaultProject = this.projects.find(p => p.id === 'net-top-viz-demo-208511');
+          if (defaultProject) {
+            this.selectedProject = defaultProject;
+          } else if (this.projects.length > 0) {
             this.selectedProject = this.projects[0];
+          }
+
+          if (this.selectedProject) {
             console.log('Default selected project:', this.selectedProject);
-            
-            // Emit the default selection
             this.projectSelected.emit(this.selectedProject);
           }
 
@@ -100,35 +98,18 @@ export class ProjectPickerComponent implements OnInit, OnDestroy {
             this.loadProjects();
           });
 
-          // Fall back to hardcoded projects for development/demo purposes
+          // Fallback project selection
           this.projects = [
-            {
-              id: 'przemeksroka-joonix-service',
-              name: 'przemeksroka-joonix-service',
-              displayName: 'przemeksroka-joonix-service'
-            },
-            {
-              id: 'my-demo-project-123456',
-              name: 'my-demo-project-123456', 
-              displayName: 'Demo Project'
-            },
-            {
-              id: 'production-env-789012',
-              name: 'production-env-789012',
-              displayName: 'Production Environment'
-            }
+            { id: 'net-top-viz-demo-208511', name: 'Demo Project' },
+            { id: 'przemeksroka-joonix-service', name: 'Joonix Service' }
           ];
-          
-          if (this.projects.length > 0 && !this.selectedProject) {
-            this.selectedProject = this.projects[0];
-            // Emit the fallback selection
-            this.projectSelected.emit(this.selectedProject);
-          }
+          this.selectedProject = this.projects[0];
+          this.projectSelected.emit(this.selectedProject);
         }
       });
   }
 
-  onProjectSelect(project: ProjectPickerProject): void {
+  onProjectSelect(project: GcpProject): void {
     this.selectedProject = project;
     console.log('Selected project:', project);
     
