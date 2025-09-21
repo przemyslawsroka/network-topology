@@ -1,9 +1,34 @@
 <div class="project-picker">
+  <!-- Loading state -->
+  <button 
+    mat-stroked-button 
+    class="project-selector loading"
+    *ngIf="isLoading">
+    <div class="project-info">
+      <span class="project-name">Loading projects...</span>
+    </div>
+    <mat-spinner diameter="20" class="loading-spinner"></mat-spinner>
+  </button>
+
+  <!-- Error state -->
+  <button 
+    mat-stroked-button 
+    class="project-selector error"
+    *ngIf="error && !isLoading"
+    (click)="onRetryLoad()">
+    <div class="project-info">
+      <span class="project-name">Error loading projects</span>
+      <span class="project-id">Click to retry</span>
+    </div>
+    <mat-icon class="dropdown-icon">refresh</mat-icon>
+  </button>
+
+  <!-- Normal state with projects -->
   <button 
     mat-stroked-button 
     [matMenuTriggerFor]="projectMenu" 
     class="project-selector"
-    *ngIf="selectedProject">
+    *ngIf="selectedProject && !isLoading && !error">
     <div class="project-info">
       <span class="project-name">{{ selectedProject.displayName }}</span>
       <span class="project-id">{{ selectedProject.id }}</span>
@@ -11,9 +36,23 @@
     <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
   </button>
 
+  <!-- Empty state -->
+  <button 
+    mat-stroked-button 
+    class="project-selector empty"
+    *ngIf="!selectedProject && !isLoading && !error && projects.length === 0"
+    (click)="onRetryLoad()">
+    <div class="project-info">
+      <span class="project-name">No projects found</span>
+      <span class="project-id">Click to retry</span>
+    </div>
+    <mat-icon class="dropdown-icon">refresh</mat-icon>
+  </button>
+
   <mat-menu #projectMenu="matMenu" class="project-menu">
     <div class="menu-header">
       <span class="menu-title">Select a project</span>
+      <span class="menu-subtitle" *ngIf="projects.length > 0">({{ projects.length }} project{{ projects.length !== 1 ? 's' : '' }} available)</span>
     </div>
     <mat-divider></mat-divider>
     
@@ -30,6 +69,12 @@
         <mat-icon *ngIf="selectedProject?.id === project.id" class="check-icon">check</mat-icon>
       </button>
     </ng-container>
+
+    <mat-divider *ngIf="projects.length > 0"></mat-divider>
+    <button mat-menu-item (click)="onRetryLoad()" class="refresh-item">
+      <mat-icon>refresh</mat-icon>
+      <span>Refresh projects</span>
+    </button>
   </mat-menu>
 </div>
 

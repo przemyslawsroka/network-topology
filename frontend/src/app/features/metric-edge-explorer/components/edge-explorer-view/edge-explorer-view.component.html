@@ -47,6 +47,34 @@
             </button>
           </div>
         </div>
+        
+        <!-- Debug Section for Authentication Issues -->
+        <div class="debug-section" *ngIf="queryDetails && !queryDetails.success">
+          <h4>🔧 Debug Authentication</h4>
+          <p class="debug-description">If you're seeing 403 errors, try these debugging steps:</p>
+          <div class="debug-buttons">
+            <button mat-stroked-button color="accent" (click)="debugAuthentication()">
+              <mat-icon>bug_report</mat-icon>
+              Debug Auth State
+            </button>
+            <button mat-raised-button color="warn" (click)="forceReAuthentication()">
+              <mat-icon>refresh</mat-icon>
+              Re-authenticate
+            </button>
+            <button mat-stroked-button color="warn" (click)="clearAuthAndRestart()">
+              <mat-icon>clear_all</mat-icon>
+              Clear All & Restart
+            </button>
+            <button mat-stroked-button color="primary" (click)="debugMetricsAvailability()">
+              <mat-icon>search</mat-icon>
+              Debug Metrics
+            </button>
+          </div>
+          <p class="debug-note">
+            <mat-icon>info</mat-icon>
+            <strong>Note:</strong> After updating OAuth scopes, you need to re-authenticate to get a token with the new permissions.
+          </p>
+        </div>
       </mat-card-content>
     </mat-card>
   </div>

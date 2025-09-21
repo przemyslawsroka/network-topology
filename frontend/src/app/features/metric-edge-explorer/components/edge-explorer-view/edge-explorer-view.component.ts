@@ -11,6 +11,8 @@ import { FormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { HttpClientModule } from '@angular/common/http';
 import { MetricDataService, Connection } from '../../services/metric-data.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { GcpMonitoringService } from '../../../../core/services/gcp-monitoring.service';
 
 interface QueryDetails {
   metric: string;
@@ -50,7 +52,11 @@ export class EdgeExplorerViewComponent implements OnInit {
   queryDetails: QueryDetails | null = null;
   isLoading: boolean = false;
 
-  constructor(private metricDataService: MetricDataService) { }
+  constructor(
+    private metricDataService: MetricDataService,
+    private authService: AuthService,
+    private gcpMonitoringService: GcpMonitoringService
+  ) { }
 
   ngOnInit(): void {
     this.fetchData();
@@ -105,5 +111,17 @@ export class EdgeExplorerViewComponent implements OnInit {
   exportData(): void {
     // Placeholder for export functionality
     console.log('Exporting edge data...');
+  }
+
+  debugAuthentication(): void {
+    console.log('=== DEBUGGING AUTHENTICATION STATE ===');
+    this.authService.debugAuthState();
+    this.gcpMonitoringService.debugAuthAndProject();
+    console.log('====================================');
+  }
+
+  forceReAuthentication(): void {
+    console.log('Forcing re-authentication to grant necessary monitoring scopes...');
+    this.authService.forceReAuthentication();
   }
 }

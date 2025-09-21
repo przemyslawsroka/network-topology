@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { GcpAuthService } from './gcp-auth.service';
+import { AuthService } from './auth.service';
 
 export interface TimeSeriesData {
   metric: {
@@ -43,16 +44,10 @@ export class GcpMonitoringService {
 
   constructor(
     private http: HttpClient,
-    private authService: GcpAuthService
+    private authService: GcpAuthService,
+    private mainAuthService: AuthService
   ) { }
 
-  /**
-   * Fetch time series data from GCP Monitoring API
-   * @param metricFilter - The metric filter (e.g., 'metric.type="networking.googleapis.com/vm_flow/egress_bytes_count"')
-   * @param startTime - Start time in ISO format
-   * @param endTime - End time in ISO format
-   * @param aggregation - Optional aggregation configuration
-   */
   listTimeSeries(
     metricFilter: string,
     startTime: string,
@@ -62,17 +57,8 @@ export class GcpMonitoringService {
     const projectId = this.authService.getProjectId();
     const accessToken = this.authService.getAccessToken();
 
-    console.log('GCP Monitoring API Call:', {
-      projectId,
-      hasToken: !!accessToken,
-      tokenLength: accessToken?.length,
-      metricFilter,
-      startTime,
-      endTime
-    });
-
     if (!accessToken) {
-      console.error('No access token available for GCP Monitoring API');
+      console.error('No OAuth2 access token available. Please authenticate first.');
       return throwError(() => new Error('No access token available. Please authenticate first.'));
     }
 
@@ -90,7 +76,6 @@ export class GcpMonitoringService {
       .set('view', 'FULL');
 
     if (aggregation) {
-      // Add aggregation parameters if provided
       if (aggregation.alignmentPeriod) {
         params = params.set('aggregation.alignmentPeriod', aggregation.alignmentPeriod);
       }
@@ -111,14 +96,16 @@ export class GcpMonitoringService {
       .pipe(
         catchError(error => {
           console.error('GCP Monitoring API Error:', error);
+          
           let errorMessage = 'Failed to fetch data from GCP Monitoring API';
           
           if (error.status === 401) {
-            errorMessage = 'Authentication failed. Please check your access token.';
+            errorMessage = 'Authentication failed. Your session may have expired.';
+            this.mainAuthService.forceReAuthentication();
           } else if (error.status === 403) {
-            errorMessage = 'Access denied. Please check your permissions.';
-          } else if (error.status === 404) {
-            errorMessage = 'Project or metric not found.';
+            errorMessage = `Permission denied for project ${projectId}. Ensure your account has the 'monitoring.read' scope and necessary IAM permissions.`;
+            console.log('Forcing re-authentication to allow user to grant correct scopes.');
+            this.mainAuthService.forceReAuthentication();
           } else if (error.error?.error?.message) {
             errorMessage = error.error.error.message;
           }
@@ -128,78 +115,16 @@ export class GcpMonitoringService {
       );
   }
 
-  /**
-   * Query metrics using PromQL (Prometheus Query Language)
-   * This uses the Prometheus-compatible API provided by Google Cloud Monitoring
-   */
-  queryPromQL(query: string, time?: string): Observable<any> {
+  debugAuthAndProject(): void {
     const projectId = this.authService.getProjectId();
     const accessToken = this.authService.getAccessToken();
-
-    if (!accessToken) {
-      return throwError(() => new Error('No access token available. Please authenticate first.'));
-    }
-
-    const url = `${this.baseUrl}/projects/${projectId}/location/global/prometheus/api/v1/query`;
+    const isAuthenticated = this.authService.isAuthenticated();
     
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    });
-
-    let body = new HttpParams().set('query', query);
-    if (time) {
-      body = body.set('time', time);
-    }
-
-    return this.http.post(url, body.toString(), { headers })
-      .pipe(
-        catchError(error => {
-          console.error('GCP Monitoring PromQL API Error:', error);
-          let errorMessage = 'Failed to execute PromQL query';
-          
-          if (error.status === 401) {
-            errorMessage = 'Authentication failed. Please check your access token.';
-          } else if (error.status === 403) {
-            errorMessage = 'Access denied. Please check your permissions.';
-          } else if (error.error?.error?.message) {
-            errorMessage = error.error.error.message;
-          }
-          
-          return throwError(() => new Error(errorMessage));
-        })
-      );
-  }
-
-  /**
-   * Get available metrics for a project
-   */
-  listMetricDescriptors(filter?: string): Observable<any> {
-    const projectId = this.authService.getProjectId();
-    const accessToken = this.authService.getAccessToken();
-
-    if (!accessToken) {
-      return throwError(() => new Error('No access token available. Please authenticate first.'));
-    }
-
-    const url = `${this.baseUrl}/projects/${projectId}/metricDescriptors`;
-    
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    });
-
-    let params = new HttpParams();
-    if (filter) {
-      params = params.set('filter', filter);
-    }
-
-    return this.http.get(url, { headers, params })
-      .pipe(
-        catchError(error => {
-          console.error('GCP Monitoring Metric Descriptors Error:', error);
-          return throwError(() => new Error('Failed to fetch metric descriptors'));
-        })
-      );
+    console.log('=== GCP MONITORING DEBUG INFO ===');
+    console.log('Project ID:', projectId);
+    console.log('Is Authenticated:', isAuthenticated);
+    console.log('Has Access Token:', !!accessToken);
+    console.log('Token Preview:', accessToken ? accessToken.substring(0, 20) + '...' : 'None');
+    console.log('==================================');
   }
 }

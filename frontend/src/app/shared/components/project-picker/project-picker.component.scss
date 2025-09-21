@@ -58,6 +58,68 @@
       margin-left: 8px;
       font-size: 20px;
     }
+
+    .loading-spinner {
+      margin-left: 8px;
+    }
+
+    // Loading state styling
+    &.loading {
+      cursor: wait;
+      opacity: 0.8;
+      
+      .project-name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+
+    // Error state styling
+    &.error {
+      background: rgba(244, 67, 54, 0.1);
+      border-color: rgba(244, 67, 54, 0.3);
+      cursor: pointer;
+      
+      &:hover {
+        background: rgba(244, 67, 54, 0.15);
+        border-color: rgba(244, 67, 54, 0.4);
+      }
+      
+      .project-name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .project-id {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .dropdown-icon {
+        color: rgba(244, 67, 54, 0.8);
+      }
+    }
+
+    // Empty state styling
+    &.empty {
+      background: rgba(255, 193, 7, 0.1);
+      border-color: rgba(255, 193, 7, 0.3);
+      cursor: pointer;
+      
+      &:hover {
+        background: rgba(255, 193, 7, 0.15);
+        border-color: rgba(255, 193, 7, 0.4);
+      }
+      
+      .project-name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .project-id {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .dropdown-icon {
+        color: rgba(255, 193, 7, 0.8);
+      }
+    }
   }
 }
 
@@ -75,6 +137,14 @@
       font-size: 16px;
       font-weight: 500;
       color: #3c4043;
+      display: block;
+    }
+
+    .menu-subtitle {
+      font-size: 12px;
+      color: #5f6368;
+      margin-top: 2px;
+      display: block;
     }
   }
   
@@ -122,6 +192,23 @@
     .check-icon {
       color: #1a73e8;
       margin-left: 8px;
+    }
+  }
+
+  .refresh-item {
+    padding: 12px 16px;
+    color: #1a73e8;
+    font-size: 14px;
+    
+    &:hover {
+      background-color: rgba(26, 115, 232, 0.04);
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
   }
 }

@@ -16,7 +16,7 @@ export interface AppConfig {
 export const APP_CONFIG: AppConfig = {
   production: false,
   gcp: {
-    projectId: 'przemekasroka-joonix-service', // Real project ID from OAuth client
+    projectId: 'przemeksroka-joonix-service', // Back to your original project for troubleshooting
     useRealApi: true, // Set to true to use real GCP Monitoring API
     mockMode: false // Set to false to use real authentication
   },

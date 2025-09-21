@@ -15,8 +15,11 @@ export class AuthService {
 
   private readonly CLIENT_ID = environment.googleClientId;
   private readonly SCOPES = [
-    'https://www.googleapis.com/auth/cloud-platform.read-only',
+    'https://www.googleapis.com/auth/cloud-platform',
+    'https://www.googleapis.com/auth/monitoring',
     'https://www.googleapis.com/auth/monitoring.read',
+    'https://www.googleapis.com/auth/monitoring.write',
+    'https://www.googleapis.com/auth/compute',
     'https://www.googleapis.com/auth/compute.readonly',
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email'
@@ -332,14 +335,12 @@ export class AuthService {
 
     // Check if scopes have changed (need re-authentication for new scopes)
     const currentScopes = this.SCOPES.sort().join(' ');
-    if (storedScopes && storedScopes !== currentScopes) {
-      console.log('AuthService: Scopes changed from', storedScopes, 'to', currentScopes);
-      console.log('AuthService: Clearing auth data for re-authentication');
+    if (!storedScopes || storedScopes !== currentScopes) {
+      console.log('AuthService: Scopes have changed or are missing.');
+      console.log('  - Stored Scopes:', storedScopes);
+      console.log('  - Required Scopes:', currentScopes);
       this.clearAuthData();
       return;
-    } else if (!storedScopes && token) {
-      console.log('AuthService: No stored scopes but token exists, updating scopes');
-      localStorage.setItem('gcp_auth_scopes', currentScopes);
     }
 
     if (token && timestamp && userData) {
@@ -379,9 +380,10 @@ export class AuthService {
   }
 
   public forceReAuthentication(): void {
-    console.log('AuthService: Forcing re-authentication...');
+    console.log('AuthService: Forcing re-authentication and redirecting to login.');
     this.clearAuthData();
     this.setCurrentUser(null);
+    this.signIn(); // Redirect to the Google OAuth sign-in page
   }
 
   public debugAuthState(): void {

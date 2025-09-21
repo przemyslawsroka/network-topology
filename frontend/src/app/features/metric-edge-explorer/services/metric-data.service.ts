@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { GcpMonitoringService, TimeSeriesData } from '../../../core/services/gcp-monitoring.service';
+import { GcpMonitoringService, MonitoringApiResponse, TimeSeriesData } from '../../../core/services/gcp-monitoring.service';
+import { APP_CONFIG } from '../../../core/config/app.config';
 
 export interface Connection {
   source: string;
@@ -22,17 +23,17 @@ export class MetricDataService {
     const metricType = this.getMetricType(metric);
     const filter = this.buildMetricFilter(metricType, edgeType);
     
-    // Set time range for the last 5 minutes
     const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    const startTime = new Date(endTime.getTime() - 6 * 60 * 60 * 1000); // 6 hours
     
     const aggregation = {
       alignmentPeriod: '60s',
       perSeriesAligner: 'ALIGN_RATE',
       crossSeriesReducer: 'REDUCE_SUM',
       groupByFields: [
-        'resource.label.instance_id',
-        'resource.label.zone'
+        'metric.labels.remote_location_type',
+        'resource.labels.instance_id',
+        'resource.labels.zone'
       ]
     };
 
@@ -42,10 +43,9 @@ export class MetricDataService {
       endTime.toISOString(),
       aggregation
     ).pipe(
-      map(response => this.transformTimeSeriesData(response.timeSeries, metric)),
-      catchError(error => {
+      map((response: MonitoringApiResponse) => this.transformTimeSeriesData(response.timeSeries, metric)),
+      catchError((error: any) => {
         console.error('Failed to fetch GCP monitoring data:', error);
-        // Fallback to mock data if real API fails
         console.log('Falling back to mock data...');
         return of(this.generateMockData(edgeType, metric));
       })
@@ -62,13 +62,11 @@ export class MetricDataService {
   }
 
   private buildMetricFilter(metricType: string, edgeType: string): string {
-    let filter = `metric.type="${metricType}"`;
+    let filter = `metric.type="${metricType}" AND resource.type="gce_instance"`;
     
-    // Add resource type filter based on edge type
     if (edgeType !== 'all') {
       switch (edgeType) {
         case 'vm_to_vm':
-          filter += ' AND resource.type="gce_instance"';
           break;
         case 'external_to_lb':
           filter += ' AND resource.type="https_lb_rule"';
@@ -86,8 +84,7 @@ export class MetricDataService {
   }
 
   private transformTimeSeriesData(timeSeries: TimeSeriesData[], metricType: string): Connection[] {
-    if (!timeSeries || timeSeries.length === 0) {
-      console.log('No time series data received, generating mock data');
+    if (!timeSeries) {
       return this.generateMockData('all', metricType);
     }
 
@@ -98,18 +95,14 @@ export class MetricDataService {
         // Get the most recent data point
         const latestPoint = series.points[0];
         
-        // Extract source and target from labels
+        // Extract source and target from VM flow metrics labels
         const sourceLabel = series.resource.labels['instance_id'] || 
-                           series.resource.labels['backend_service'] || 
-                           series.metric.labels['source_vm'] || 
+                           series.resource.labels['zone'] || 
                            'unknown-source';
         
-        const targetLabel = series.metric.labels['target_vm'] || 
-                           series.metric.labels['destination'] ||
-                           series.resource.labels['zone'] || 
+        const targetLabel = series.metric.labels['remote_location_type'] || 
                            'unknown-target';
         
-        // Format the metric value
         let metricValue = 'N/A';
         if (latestPoint.value.doubleValue !== undefined) {
           metricValue = this.formatMetricValue(latestPoint.value.doubleValue, metricType);
@@ -125,13 +118,7 @@ export class MetricDataService {
       }
     });
 
-    // If no connections were extracted, fall back to mock data
-    if (connections.length === 0) {
-      console.log('No connections extracted from time series data, generating mock data');
-      return this.generateMockData('all', metricType);
-    }
-    
-    return connections;
+    return connections.length > 0 ? connections : this.generateMockData('all', metricType);
   }
 
   private formatMetricValue(value: number, metricType: string): string {
