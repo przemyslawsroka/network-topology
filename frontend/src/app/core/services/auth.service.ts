@@ -317,10 +317,14 @@ export class AuthService {
 
     // Check if scopes have changed (need re-authentication for new scopes)
     const currentScopes = this.SCOPES.sort().join(' ');
-    if (storedScopes !== currentScopes) {
-      console.log('AuthService: Scopes changed, clearing auth data for re-authentication');
+    if (storedScopes && storedScopes !== currentScopes) {
+      console.log('AuthService: Scopes changed from', storedScopes, 'to', currentScopes);
+      console.log('AuthService: Clearing auth data for re-authentication');
       this.clearAuthData();
       return;
+    } else if (!storedScopes && token) {
+      console.log('AuthService: No stored scopes but token exists, updating scopes');
+      localStorage.setItem('gcp_auth_scopes', currentScopes);
     }
 
     if (token && timestamp && userData) {
@@ -365,14 +369,65 @@ export class AuthService {
     this.setCurrentUser(null);
   }
 
+  public debugAuthState(): void {
+    console.log('=== AUTH DEBUG STATE ===');
+    console.log('Current URL:', window.location.href);
+    console.log('Is authenticated:', this.isAuthenticated());
+    console.log('Current user:', this.getCurrentUser());
+    console.log('Auth token:', this.getAuthToken());
+    console.log('localStorage items:');
+    console.log('  gcp_auth_token:', localStorage.getItem('gcp_auth_token'));
+    console.log('  gcp_auth_timestamp:', localStorage.getItem('gcp_auth_timestamp'));
+    console.log('  gcp_user_data:', localStorage.getItem('gcp_user_data'));
+    console.log('  gcp_auth_scopes:', localStorage.getItem('gcp_auth_scopes'));
+    console.log('=========================');
+  }
+
   public async processAuthCallback(): Promise<boolean> {
     console.log('AuthService: Processing auth callback...');
     try {
-      await this.handleAuthCallback();
+      // Force processing the callback regardless of current path
+      await this.forceHandleAuthCallback();
       return this.isAuthenticated();
     } catch (error) {
       console.error('AuthService: Auth callback processing failed:', error);
       return false;
+    }
+  }
+
+  private async forceHandleAuthCallback(): Promise<void> {
+    console.log('AuthService: Force handling auth callback');
+    
+    // Check for implicit flow (hash parameters)
+    if (window.location.hash) {
+      console.log('Handling implicit flow callback...');
+      await this.handleImplicitFlowCallback();
+      return;
+    }
+
+    // Check for authorization code flow (query parameters)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
+
+    console.log('Handling auth callback:', { code: !!code, error, pathname: window.location.pathname });
+
+    if (error) {
+      console.error('OAuth error:', error);
+      throw new Error(`OAuth error: ${error}`);
+    }
+
+    if (code) {
+      console.log('Processing authorization code...');
+      try {
+        await this.exchangeCodeForToken(code);
+        console.log('Token exchange successful');
+      } catch (error) {
+        console.error('Token exchange failed:', error);
+        throw error;
+      }
+    } else {
+      throw new Error('No authorization code found in callback');
     }
   }
 }
