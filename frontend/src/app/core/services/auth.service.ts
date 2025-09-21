@@ -172,7 +172,12 @@ export class AuthService {
         redirect_uri: this.REDIRECT_URI,
       });
 
-      console.log('Token exchange request params:', Object.fromEntries(tokenParams));
+      console.log('Token exchange request params:', {
+        client_id: this.CLIENT_ID,
+        grant_type: 'authorization_code',
+        redirect_uri: this.REDIRECT_URI,
+        code: !!code
+      });
 
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -219,7 +224,7 @@ export class AuthService {
       }
       
       // For any OAuth configuration issues, try implicit flow
-      if (error.message && (error.message.includes('client_secret') || 
+      if (error instanceof Error && error.message && (error.message.includes('client_secret') || 
                            error.message.includes('invalid_request'))) {
         console.log('OAuth configuration error, falling back to implicit flow...');
         await this.fallbackToImplicitFlow();
