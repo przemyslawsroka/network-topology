@@ -63,7 +63,7 @@
         [class.selected]="selectedProject?.id === project.id"
         class="project-item">
         <div class="project-details">
-          <div class="project-display-name">{{ project.displayName }}</div>
+          <div class="project-display-name">{{ project.name }}</div>
           <div class="project-full-id">{{ project.id }}</div>
         </div>
         <mat-icon *ngIf="selectedProject?.id === project.id" class="check-icon">check</mat-icon>
