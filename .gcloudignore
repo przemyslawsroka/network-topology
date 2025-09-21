@@ -1,0 +1,20 @@
+# This file specifies files and directories that should not be uploaded to
+# Google Cloud Build.
+
+# Node.js dependencies - these are installed from scratch by the Dockerfile
+node_modules/
+frontend/node_modules/
+
+# Git version control directory
+.git/
+
+# Infrastructure and local development scripts
+infra/
+start-dev.sh
+
+# IDE configuration
+.vscode/
+.idea/
+
+# This file
+.gcloudignore

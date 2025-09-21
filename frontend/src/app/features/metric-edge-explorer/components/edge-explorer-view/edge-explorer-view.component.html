@@ -9,24 +9,40 @@
   <div class="controls-section">
     <mat-card class="controls-card">
       <mat-card-header>
-        <mat-card-title>
-          <mat-icon>filter_list</mat-icon>
-          Filters & Controls
-        </mat-card-title>
+        <mat-card-title>Metric Edge Explorer</mat-card-title>
+        <mat-card-subtitle>Analyze network connections, traffic metrics, and performance data between nodes in your infrastructure.</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="controls-row">
-          <div class="action-buttons">
-            <button mat-raised-button color="primary" (click)="fetchData()" [disabled]="isLoading">
-              <mat-icon>play_arrow</mat-icon>
-              Run Query
-            </button>
-            <button mat-stroked-button (click)="exportData()">
-              <mat-icon>download</mat-icon>
-              Export
-            </button>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>filter_list</mat-icon>
+              <span class="filter-title">Filters & Controls</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          
+          <div class="controls-container">
+            <div class="filter-section">
+              <h4 class="filter-heading">Select Granularity</h4>
+              <mat-selection-list #granularityList [(ngModel)]="selectedGranularities">
+                <mat-list-option *ngFor="let granularity of allGranularities" [value]="granularity">
+                  {{ granularity.displayName }}
+                </mat-list-option>
+              </mat-selection-list>
+            </div>
+
+            <div class="actions-section">
+              <button mat-flat-button color="primary" (click)="fetchData()" [disabled]="isLoading">
+                <mat-icon>play_arrow</mat-icon>
+                Run Query
+              </button>
+              <button mat-stroked-button (click)="exportData()" [disabled]="isLoading">
+                <mat-icon>download</mat-icon>
+                Export
+              </button>
+            </div>
           </div>
-        </div>
+        </mat-expansion-panel>
       </mat-card-content>
     </mat-card>
   </div>
@@ -61,79 +77,68 @@
   </div>
 
   <div class="data-table-section">
-    <mat-card class="data-card">
+    <mat-card *ngIf="!isLoading && connections.length > 0" class="results-card">
       <mat-card-header>
         <mat-card-title>
           <mat-icon>hub</mat-icon>
           Network Connections
         </mat-card-title>
-        <mat-card-subtitle>
-          Detailed view of all network edges and their metrics
-        </mat-card-subtitle>
+        <mat-card-subtitle>Detailed view of all network edges and their metrics</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <table mat-table [dataSource]="groupedConnections" class="edges-table">
+        <table mat-table [dataSource]="connections" class="mat-elevation-z8 connections-table">
+
           <!-- Source Column -->
           <ng-container matColumnDef="source">
-            <th mat-header-cell *matHeaderCellDef>Source</th>
-            <td mat-cell *matCellDef="let group">
-              <div class="node-cell source-cell">
-                <mat-icon class="node-icon">device_hub</mat-icon>
-                <div>
-                  <strong>{{ group.source.name }}</strong>
-                  <div class="resource-type">{{ group.source.type }}</div>
-                </div>
+            <th mat-header-cell *matHeaderCellDef> Source </th>
+            <td mat-cell *matCellDef="let element">
+              <div class="cell-content">
+                <mat-icon class="icon-vm">computer</mat-icon>
+                <span class="vm-name">{{element.source.name}}</span>
+                <span class="entity-type">{{element.source.type}}</span>
               </div>
             </td>
           </ng-container>
 
           <!-- Granularity Column -->
           <ng-container matColumnDef="granularity">
-            <th mat-header-cell *matHeaderCellDef>Granularity</th>
-            <td mat-cell *matCellDef="let group">
-              <div class="granularity-cell">
-                {{ group.granularity }}
-              </div>
-            </td>
+            <th mat-header-cell *matHeaderCellDef> Granularity </th>
+            <td mat-cell *matCellDef="let element"> {{element.granularity}} </td>
           </ng-container>
 
           <!-- Target Column -->
           <ng-container matColumnDef="target">
-            <th mat-header-cell *matHeaderCellDef>Target</th>
-            <td mat-cell *matCellDef="let group">
-              <div *ngFor="let item of group.targets" class="target-row">
-                <mat-icon class="node-icon">arrow_forward</mat-icon>
-                <div>
-                  {{ item.target.name }}
-                  <div class="resource-type">{{ item.target.type }}</div>
-                </div>
+            <th mat-header-cell *matHeaderCellDef> Target </th>
+            <td mat-cell *matCellDef="let element">
+              <div class="cell-content">
+                <mat-icon class="icon-arrow">arrow_forward</mat-icon>
+                <span class="target-name">{{element.target.name}}</span>
+                <span class="entity-type">{{element.target.type}}</span>
               </div>
             </td>
           </ng-container>
 
           <!-- Metric Name Column -->
           <ng-container matColumnDef="metricName">
-            <th mat-header-cell *matHeaderCellDef>Metric</th>
-            <td mat-cell *matCellDef="let group">
-              <div *ngFor="let item of group.targets" class="target-row">
-                {{ item.metricName }}
-              </div>
-            </td>
+            <th mat-header-cell *matHeaderCellDef> Metric </th>
+            <td mat-cell *matCellDef="let element"> {{element.metricName}} </td>
           </ng-container>
 
           <!-- Metric Value Column -->
           <ng-container matColumnDef="metricValue">
-            <th mat-header-cell *matHeaderCellDef>Metric Value</th>
-            <td mat-cell *matCellDef="let group">
-              <div *ngFor="let item of group.targets" class="target-row">
-                {{ item.metricValue }}
-              </div>
-            </td>
+            <th mat-header-cell *matHeaderCellDef> Metric Value </th>
+            <td mat-cell *matCellDef="let element"> {{element.metricValue}} </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card *ngIf="!isLoading && connections.length === 0" class="no-results-card">
+      <mat-card-content>
+        <p>No network connections found for the selected filters.</p>
       </mat-card-content>
     </mat-card>
   </div>

@@ -13,6 +13,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { MetricDataService, Connection, MetricQueryResult } from '../../services/metric-data.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { GcpMonitoringService } from '../../../../core/services/gcp-monitoring.service';
+import { MatListModule } from '@angular/material/list';
 
 interface QuerySummary {
   totalLatency: number;
@@ -27,13 +28,11 @@ interface IndividualQueryResult {
   errorMessage?: string;
 }
 
-export interface GroupedConnection {
+export interface FlatConnection {
   source: { name: string; type: string };
-  targets: { 
-    target: { name: string; type: string }; 
-    metricValue: string; 
-    metricName: string;
-  }[];
+  target: { name: string; type: string };
+  metricName: string;
+  metricValue: string;
   granularity: string;
 }
 
@@ -51,16 +50,20 @@ export interface GroupedConnection {
     MatFormFieldModule,
     FormsModule,
     MatExpansionModule,
-    HttpClientModule
+    HttpClientModule,
+    MatListModule
   ],
   templateUrl: './edge-explorer-view.component.html',
   styleUrls: ['./edge-explorer-view.component.scss']
 })
 export class EdgeExplorerViewComponent implements OnInit {
   
-  groupedConnections: GroupedConnection[] = [];
+  connections: FlatConnection[] = [];
   displayedColumns: string[] = ['source', 'granularity', 'target', 'metricName', 'metricValue'];
   
+  allGranularities: any[] = [];
+  selectedGranularities: any[] = [];
+
   querySummary: QuerySummary | null = null;
   isLoading: boolean = false;
 
@@ -71,18 +74,19 @@ export class EdgeExplorerViewComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Data will be loaded when a project is selected
+    this.allGranularities = this.metricDataService.getAvailableGranularities();
+    this.selectedGranularities = [...this.allGranularities];
   }
 
   fetchData(): void {
     this.isLoading = true;
     const startTime = Date.now();
     
-    this.metricDataService.getMetricData()
+    this.metricDataService.getMetricData(this.selectedGranularities)
       .subscribe({
         next: (results: MetricQueryResult[]) => {
           const endTime = Date.now();
-          this.groupedConnections = this.groupConnections(results);
+          this.connections = this.flattenConnections(results);
           
           this.querySummary = {
             totalLatency: endTime - startTime,
@@ -108,28 +112,20 @@ export class EdgeExplorerViewComponent implements OnInit {
       });
   }
 
-  private groupConnections(results: MetricQueryResult[]): GroupedConnection[] {
-    const groupedBySource: { [key: string]: GroupedConnection } = {};
-
+  private flattenConnections(results: MetricQueryResult[]): FlatConnection[] {
+    const flatList: FlatConnection[] = [];
     results.forEach(result => {
       result.connections.forEach(connection => {
-        const key = `${connection.source.name}-${result.metricName}`;
-        if (!groupedBySource[key]) {
-          groupedBySource[key] = {
-            source: connection.source,
-            targets: [],
-            granularity: result.metricName
-          };
-        }
-        groupedBySource[key].targets.push({
+        flatList.push({
+          source: connection.source,
           target: connection.target,
-          metricValue: connection.metricValue.split(': ')[1], // Extract just the value
-          metricName: connection.metricValue.split(': ')[0]  // Extract just the name
+          metricName: connection.metricValue.split(': ')[0],
+          metricValue: connection.metricValue.split(': ')[1],
+          granularity: result.metricName
         });
       });
     });
-
-    return Object.values(groupedBySource);
+    return flatList;
   }
 
   exportData(): void {

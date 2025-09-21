@@ -43,48 +43,76 @@ export class MetricDataService {
       metricType: 'networking.googleapis.com/vm_flow/egress_bytes_count',
       resourceType: 'gce_instance',
       granularities: [
-        { displayName: 'VM to External', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_location_type', sourceType: 'VM', targetType: 'External' },
-        { displayName: 'VM to Zone', sourceField: 'resource.labels.instance_id', targetField: 'resource.labels.zone', sourceType: 'VM', targetType: 'Zone' },
-        { displayName: 'Zone to Zone', sourceField: 'resource.labels.zone', targetField: 'metric.labels.remote_location_type', sourceType: 'Zone', targetType: 'External' }
+        { displayName: 'Instance to Instance', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_instance_id', sourceType: 'Instance', targetType: 'Instance' },
+        { displayName: 'Instance to Subnet', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_subnet_name', sourceType: 'Instance', targetType: 'Subnet' },
+        { displayName: 'Instance to Zone', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_zone', sourceType: 'Instance', targetType: 'Zone' },
+        { displayName: 'Instance to Region', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_region', sourceType: 'Instance', targetType: 'Region' },
+        { displayName: 'Subnet to Subnet', sourceField: 'resource.labels.subnet_name', targetField: 'metric.labels.remote_subnet_name', sourceType: 'Subnet', targetType: 'Subnet' },
+        { displayName: 'Zone to Zone', sourceField: 'resource.labels.zone', targetField: 'metric.labels.remote_zone', sourceType: 'Zone', targetType: 'Zone' },
+        { displayName: 'Region to Region', sourceField: 'resource.labels.region', targetField: 'metric.labels.remote_region', sourceType: 'Region', targetType: 'Region' },
+        { displayName: 'Instance to Country', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_country', sourceType: 'Instance', targetType: 'Country' },
+        { displayName: 'Instance to Business Region', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_business_region', sourceType: 'Instance', targetType: 'Business Region' }
       ]
     },
     {
       metricType: 'loadbalancing.googleapis.com/https/request_bytes_count',
       resourceType: 'https_lb_rule',
       granularities: [
-        { displayName: 'External to LB', sourceField: 'metric.labels.remote_country', targetField: 'resource.labels.forwarding_rule_name', sourceType: 'External', targetType: 'Load Balancer' }
+        { displayName: 'Country to Load Balancer', sourceField: 'metric.labels.remote_country', targetField: 'resource.labels.forwarding_rule_name', sourceType: 'Country', targetType: 'Load Balancer' }
       ]
     },
     {
       metricType: 'loadbalancing.googleapis.com/https/backend_request_bytes_count',
       resourceType: 'https_lb_rule',
       granularities: [
-        { displayName: 'LB to Backend', sourceField: 'resource.labels.backend_name', targetField: 'resource.labels.backend_zone', sourceType: 'Load Balancer', targetType: 'Backend' }
+        { displayName: 'Load Balancer to Instance Group', sourceField: 'resource.labels.backend_name', targetField: 'resource.labels.backend_zone', sourceType: 'Load Balancer', targetType: 'Instance Group' }
       ]
     },
     {
-      metricType: 'networking.googleapis.com/vm_flow/rtt',
+      metricType: 'networking.googleapis.com/interconnect_attachment/vm/egress_bytes_count',
       resourceType: 'gce_instance',
       granularities: [
-        { displayName: 'VM to VM Latency', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.remote_instance_id', sourceType: 'VM', targetType: 'VM' }
+        { displayName: 'Instance to VLAN Attachment', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.attachment_id', sourceType: 'Instance', targetType: 'VLAN Attachment' }
+      ]
+    },
+    {
+      metricType: 'networking.googleapis.com/vpn_tunnel/vm/egress_bytes_count',
+      resourceType: 'gce_instance',
+      granularities: [
+        { displayName: 'Instance to VPN Tunnel', sourceField: 'resource.labels.instance_id', targetField: 'metric.labels.tunnel_id', sourceType: 'Instance', targetType: 'VPN Tunnel' }
       ]
     }
   ];
 
   constructor(private gcpMonitoringService: GcpMonitoringService) { }
 
-  getMetricData(): Observable<MetricQueryResult[]> {
-    console.log(`Fetching all relevant GCP metrics`);
-    
-    const requests: Observable<MetricQueryResult>[] = [];
+  getAvailableGranularities(): { displayName: string, config: MetricConfig, granularity: Granularity }[] {
+    const allGranularities: { displayName: string, config: MetricConfig, granularity: Granularity }[] = [];
     this.METRIC_CONFIGS.forEach(config => {
       config.granularities.forEach(granularity => {
-        requests.push(this.fetchSingleMetric(config, granularity));
+        allGranularities.push({
+          displayName: granularity.displayName,
+          config: config,
+          granularity: granularity
+        });
       });
     });
+    return allGranularities;
+  }
+
+  getMetricData(selectedGranularities: { config: MetricConfig, granularity: Granularity }[]): Observable<MetricQueryResult[]> {
+    console.log(`Fetching GCP metrics for selected granularities`);
+    
+    if (!selectedGranularities || selectedGranularities.length === 0) {
+      return of([]);
+    }
+
+    const requests: Observable<MetricQueryResult>[] = selectedGranularities.map(sg => 
+      this.fetchSingleMetric(sg.config, sg.granularity)
+    );
 
     return forkJoin(requests).pipe(
-      map(results => results.filter(r => r.connections.length > 0)) // Filter out empty results
+      map(results => results.filter(r => r.connections.length > 0))
     );
   }
 
