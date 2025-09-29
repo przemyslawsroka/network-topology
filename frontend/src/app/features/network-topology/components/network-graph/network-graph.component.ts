@@ -1,11 +1,11 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as d3 from 'd3';
 
 export interface Node {
   id: string;
   name: string;
-  type: 'region' | 'vpc' | 'subnet' | 'instance' | 'service';
+  type: string;
   region?: string;
   status: 'healthy' | 'warning' | 'error';
   x?: number;
@@ -17,7 +17,8 @@ export interface Node {
 export interface Link {
   source: string | Node;
   target: string | Node;
-  type: 'network' | 'peering' | 'vpn' | 'interconnect';
+  type: string;
+  metricValue?: string;
 }
 
 @Component({
@@ -59,7 +60,7 @@ export interface Link {
   styles: [`
     .network-graph-container {
       width: 100%;
-      height: 600px;
+      height: 800px;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       position: relative;
@@ -185,8 +186,10 @@ export interface Link {
     }
   `]
 })
-export class NetworkGraphComponent implements OnInit, AfterViewInit, OnDestroy {
+export class NetworkGraphComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('networkSvg', { static: true }) svgElement!: ElementRef<SVGElement>;
+  @Input() nodes: Node[] = [];
+  @Input() links: Link[] = [];
 
   private svg: any;
   private simulation: any;
@@ -194,49 +197,16 @@ export class NetworkGraphComponent implements OnInit, AfterViewInit, OnDestroy {
   private width = 800;
   private height = 530;
 
-  // Demo data
-  private nodes: Node[] = [
-    { id: 'us-central1', name: 'us-central1', type: 'region', status: 'healthy' },
-    { id: 'us-east1', name: 'us-east1', type: 'region', status: 'healthy' },
-    { id: 'europe-west1', name: 'europe-west1', type: 'region', status: 'healthy' },
-    
-    { id: 'vpc-prod', name: 'vpc-production', type: 'vpc', region: 'us-central1', status: 'healthy' },
-    { id: 'vpc-staging', name: 'vpc-staging', type: 'vpc', region: 'us-east1', status: 'healthy' },
-    { id: 'vpc-dev', name: 'vpc-development', type: 'vpc', region: 'europe-west1', status: 'warning' },
-    
-    { id: 'web-server-1', name: 'web-server-1', type: 'instance', status: 'healthy' },
-    { id: 'web-server-2', name: 'web-server-2', type: 'instance', status: 'healthy' },
-    { id: 'db-server', name: 'database-server', type: 'instance', status: 'healthy' },
-    { id: 'cache-server', name: 'redis-cache', type: 'instance', status: 'warning' },
-    
-    { id: 'api-gateway', name: 'API Gateway', type: 'service', status: 'healthy' },
-    { id: 'load-balancer', name: 'Load Balancer', type: 'service', status: 'healthy' },
-    { id: 'cloud-sql', name: 'Cloud SQL', type: 'service', status: 'healthy' }
-  ];
-
-  private links: Link[] = [
-    { source: 'us-central1', target: 'vpc-prod', type: 'network' },
-    { source: 'us-east1', target: 'vpc-staging', type: 'network' },
-    { source: 'europe-west1', target: 'vpc-dev', type: 'network' },
-    
-    { source: 'vpc-prod', target: 'vpc-staging', type: 'peering' },
-    { source: 'vpc-staging', target: 'vpc-dev', type: 'vpn' },
-    
-    { source: 'vpc-prod', target: 'web-server-1', type: 'network' },
-    { source: 'vpc-prod', target: 'web-server-2', type: 'network' },
-    { source: 'vpc-prod', target: 'db-server', type: 'network' },
-    { source: 'vpc-staging', target: 'cache-server', type: 'network' },
-    
-    { source: 'load-balancer', target: 'web-server-1', type: 'network' },
-    { source: 'load-balancer', target: 'web-server-2', type: 'network' },
-    { source: 'api-gateway', target: 'load-balancer', type: 'network' },
-    { source: 'db-server', target: 'cloud-sql', type: 'interconnect' }
-  ];
-
   ngOnInit(): void {}
 
   ngAfterViewInit(): void {
     this.initializeGraph();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if ((changes['nodes'] || changes['links']) && this.svg) {
+      this.updateGraph();
+    }
   }
 
   ngOnDestroy(): void {
@@ -259,28 +229,53 @@ export class NetworkGraphComponent implements OnInit, AfterViewInit, OnDestroy {
           this.svg.select('.graph-content').attr('transform', transform);
         }));
 
-    const graphContent = this.svg.append('g').attr('class', 'graph-content');
+    this.svg.append('g').attr('class', 'graph-content');
 
-    // Create simulation
+    this.updateGraph();
+  }
+
+  private updateGraph(): void {
+    if (!this.svg || !this.nodes || !this.links) return;
+
+    const graphContent = this.svg.select('.graph-content');
+    
+    // Clear existing content
+    graphContent.selectAll('*').remove();
+
+    // Create simulation with current data
+    if (this.simulation) {
+      this.simulation.stop();
+    }
+
     this.simulation = d3.forceSimulation(this.nodes)
-      .force('link', d3.forceLink(this.links).id((d: any) => d.id).distance(80))
-      .force('charge', d3.forceManyBody().strength(-300))
+      .force('link', d3.forceLink(this.links).id((d: any) => d.id).distance(100))
+      .force('charge', d3.forceManyBody().strength(-500))
       .force('center', d3.forceCenter(this.width / 2, this.height / 2))
-      .force('collision', d3.forceCollide().radius(30));
+      .force('collision', d3.forceCollide().radius(40));
 
     // Create links
     const link = graphContent.append('g')
       .selectAll('line')
       .data(this.links)
       .enter().append('line')
-      .attr('class', (d: Link) => `link ${d.type}`);
+      .attr('class', (d: Link) => `link ${this.getLinkClass(d.type)}`);
+
+    // Add link labels (for metric values)
+    const linkLabels = graphContent.append('g')
+      .selectAll('text')
+      .data(this.links)
+      .enter().append('text')
+      .attr('class', 'link-label')
+      .attr('font-size', '9px')
+      .attr('fill', '#666')
+      .text((d: Link) => d.metricValue || '');
 
     // Create nodes
     const node = graphContent.append('g')
       .selectAll('circle')
       .data(this.nodes)
       .enter().append('circle')
-      .attr('class', (d: Node) => `node ${d.type} ${d.status}`)
+      .attr('class', (d: Node) => `node ${this.getNodeClass(d.type)} ${d.status}`)
       .attr('r', (d: Node) => this.getNodeRadius(d.type))
       .call(this.drag());
 
@@ -304,6 +299,10 @@ export class NetworkGraphComponent implements OnInit, AfterViewInit, OnDestroy {
         .attr('x2', (d: any) => d.target.x)
         .attr('y2', (d: any) => d.target.y);
 
+      linkLabels
+        .attr('x', (d: any) => (d.source.x + d.target.x) / 2)
+        .attr('y', (d: any) => (d.source.y + d.target.y) / 2);
+
       node
         .attr('cx', (d: any) => d.x)
         .attr('cy', (d: any) => d.y);
@@ -315,14 +314,50 @@ export class NetworkGraphComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getNodeRadius(type: string): number {
-    switch (type) {
+    const normalizedType = type.toLowerCase();
+    switch (normalizedType) {
       case 'region': return 20;
       case 'vpc': return 16;
       case 'subnet': return 12;
       case 'instance': return 14;
       case 'service': return 18;
+      case 'zone': return 18;
+      case 'country': return 22;
+      case 'business region': return 20;
+      case 'load balancer': return 16;
+      case 'instance group': return 14;
+      case 'vlan attachment': return 14;
+      case 'vpn tunnel': return 14;
       default: return 12;
     }
+  }
+
+  private getNodeClass(type: string): string {
+    const normalizedType = type.toLowerCase();
+    switch (normalizedType) {
+      case 'region':
+      case 'zone':
+      case 'country':
+      case 'business region':
+        return 'region';
+      case 'vpc':
+      case 'subnet':
+        return 'vpc';
+      case 'instance':
+      case 'instance group':
+        return 'instance';
+      case 'service':
+      case 'load balancer':
+      case 'vlan attachment':
+      case 'vpn tunnel':
+        return 'service';
+      default:
+        return 'instance';
+    }
+  }
+
+  private getLinkClass(type: string): string {
+    return 'network'; // Default to network for all metric-based connections
   }
 
   private drag(): any {

@@ -1,5 +1,5 @@
 .topology-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -24,6 +24,97 @@
 }
 
 .topology-content {
+  .latency-card {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #1976d2;
+
+    mat-card-header {
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 500;
+        color: #3c4043;
+
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .stat-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+
+        .stat-label {
+          font-size: 12px;
+          color: #5f6368;
+          margin-bottom: 4px;
+        }
+
+        .stat-value {
+          font-size: 24px;
+          font-weight: 500;
+          color: #3c4043;
+
+          &.primary {
+            color: #1976d2;
+          }
+
+          &.success {
+            color: #34a853;
+          }
+        }
+      }
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+
+      button {
+        mat-icon {
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+
+  .loading-card {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+
+      mat-spinner {
+        margin-bottom: 16px;
+      }
+
+      p {
+        font-size: 14px;
+        color: #5f6368;
+        margin: 0;
+      }
+    }
+  }
+
   .graph-card {
     margin-bottom: 32px;
     border-radius: 12px;
@@ -32,51 +123,6 @@
     mat-card-content {
       padding: 0;
       overflow: hidden;
-    }
-  }
-  
-  .info-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    
-    .info-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
-      
-      &:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-        transform: translateY(-2px);
-      }
-      
-      mat-card-header {
-        .info-avatar {
-          background-color: #1976d2;
-          color: white;
-          
-          mat-icon {
-            font-size: 24px;
-            width: 24px;
-            height: 24px;
-          }
-        }
-        
-        mat-card-title {
-          font-size: 18px;
-          font-weight: 500;
-          color: #3c4043;
-        }
-      }
-      
-      mat-card-content {
-        p {
-          font-size: 14px;
-          color: #5f6368;
-          line-height: 1.5;
-          margin: 0;
-        }
-      }
     }
   }
 }
@@ -101,17 +147,6 @@
   .topology-content {
     .graph-card {
       margin-bottom: 24px;
-    }
-    
-    .info-cards {
-      grid-template-columns: 1fr;
-      gap: 16px;
-      
-      .info-card {
-        &:hover {
-          transform: none;
-        }
-      }
     }
   }
 }

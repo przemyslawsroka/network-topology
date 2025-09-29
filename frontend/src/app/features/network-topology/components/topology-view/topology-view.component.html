@@ -2,67 +2,68 @@
   <div class="topology-header">
     <h1 class="page-title">Network Topology</h1>
     <p class="page-subtitle">
-      Visualize your GCP network infrastructure and traffic flows
+      Visualize your GCP network infrastructure and traffic flows based on real-time metrics
     </p>
   </div>
 
   <div class="topology-content">
-    <!-- Network Graph -->
-    <mat-card class="graph-card">
+    <!-- Latency & Stats Card -->
+    <mat-card class="latency-card" *ngIf="latencyInfo">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>speed</mat-icon>
+          Data Loading Statistics
+        </mat-card-title>
+      </mat-card-header>
       <mat-card-content>
-        <app-network-graph></app-network-graph>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Total Load Time</div>
+            <div class="stat-value primary">{{latencyInfo.totalLatency}}ms</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Metrics Queried</div>
+            <div class="stat-value">{{latencyInfo.metricCount}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Connections Found</div>
+            <div class="stat-value">{{latencyInfo.connectionCount}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Nodes</div>
+            <div class="stat-value">{{nodes.length}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Edges</div>
+            <div class="stat-value">{{links.length}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Query Success</div>
+            <div class="stat-value success">{{latencyInfo.successCount}}/{{latencyInfo.metricCount}}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button mat-raised-button color="primary" (click)="refreshData()" [disabled]="isLoading">
+            <mat-icon>refresh</mat-icon>
+            Refresh Data
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
 
-    <!-- Info Cards -->
-    <div class="info-cards">
-      <mat-card class="info-card">
-        <mat-card-header>
-          <div mat-card-avatar class="info-avatar">
-            <mat-icon>visibility</mat-icon>
-          </div>
-          <mat-card-title>Network Visualization</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>Interactive topology graphs showing your GCP network resources and connections.</p>
-        </mat-card-content>
-      </mat-card>
+    <!-- Loading Spinner -->
+    <mat-card class="loading-card" *ngIf="isLoading">
+      <mat-card-content class="loading-content">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading topology data from GCP metrics...</p>
+      </mat-card-content>
+    </mat-card>
 
-      <mat-card class="info-card">
-        <mat-card-header>
-          <div mat-card-avatar class="info-avatar">
-            <mat-icon>analytics</mat-icon>
-          </div>
-          <mat-card-title>Metrics & Analytics</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>High-level network metrics and performance indicators in real-time.</p>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="info-card">
-        <mat-card-header>
-          <div mat-card-avatar class="info-avatar">
-            <mat-icon>device_hub</mat-icon>
-          </div>
-          <mat-card-title>Flow Analysis</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>VPC flow logs analysis to understand traffic patterns and anomalies.</p>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="info-card">
-        <mat-card-header>
-          <div mat-card-avatar class="info-avatar">
-            <mat-icon>security</mat-icon>
-          </div>
-          <mat-card-title>Security Insights</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>Network security analysis and threat detection capabilities.</p>
-        </mat-card-content>
-      </mat-card>
-    </div>
+    <!-- Network Graph -->
+    <mat-card class="graph-card" *ngIf="!isLoading">
+      <mat-card-content>
+        <app-network-graph [nodes]="nodes" [links]="links"></app-network-graph>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>

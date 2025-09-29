@@ -1,281 +1,449 @@
 .flow-logs-explorer-container {
-  padding: 24px;
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0 24px;
 }
 
 .header {
+  text-align: center;
   margin-bottom: 32px;
-  
+  padding: 32px 0 16px 0;
+
   .page-title {
     font-size: 32px;
     font-weight: 400;
     color: #3c4043;
     margin: 0 0 8px 0;
   }
-  
+
   .page-description {
     font-size: 16px;
     color: #5f6368;
     margin: 0;
-    line-height: 1.5;
+    max-width: 800px;
+    margin: 0 auto;
   }
 }
 
-.controls-section {
+// Configuration Section
+.config-section {
   margin-bottom: 24px;
-  
-  .controls-card {
-    .controls-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      
-      mat-form-field {
-        min-width: 200px;
-      }
-      
-      .action-buttons {
-        display: flex;
-        gap: 8px;
-        margin-left: auto;
-        
-        button {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-      }
-    }
-  }
-}
 
-.metrics-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-  
-  .metric-card {
-    mat-card {
-      text-align: center;
-      
-      mat-card-content {
-        padding: 24px 16px;
-        
-        .metric-value {
-          font-size: 28px;
-          font-weight: 500;
-          color: #1a73e8;
-          margin-bottom: 8px;
-        }
-        
-        .metric-label {
-          font-size: 14px;
-          color: #5f6368;
-          font-weight: 500;
-        }
-      }
-    }
-  }
-}
+  .config-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-.data-table-section {
-  .data-card {
     mat-card-header {
-      margin-bottom: 16px;
-      
       mat-card-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 20px;
-        
+        font-size: 18px;
+        color: #3c4043;
+
         mat-icon {
-          color: #1a73e8;
+          color: #1976d2;
         }
       }
     }
-    
-    .flow-logs-table {
-      width: 100%;
-      
-      .instance-cell {
+
+    .config-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+
+      .dataset-field {
+        flex: 1;
+        min-width: 400px;
+      }
+
+      mat-form-field {
+        width: 200px;
+      }
+    }
+
+    .error-hint {
+      color: #d32f2f;
+    }
+  }
+}
+
+// Granularity Selection
+.granularity-section {
+  margin-bottom: 24px;
+
+  mat-expansion-panel {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    mat-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  .granularity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 16px 0;
+
+    .granularity-item {
+      mat-checkbox {
+        width: 100%;
+
+        .granularity-label {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+
+          strong {
+            color: #3c4043;
+            font-size: 14px;
+          }
+
+          .granularity-desc {
+            color: #5f6368;
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+
+  .granularity-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 16px;
+  }
+}
+
+// Loading Section
+.loading-section {
+  margin-bottom: 24px;
+
+  .loading-card {
+    border-radius: 12px;
+    text-align: center;
+    padding: 48px 24px;
+
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+
+      p {
+        margin: 0;
+        color: #5f6368;
+        font-size: 16px;
+      }
+
+      .loading-detail {
+        font-size: 14px;
+        color: #9aa0a6;
+      }
+    }
+  }
+}
+
+// Summary Section
+.summary-section {
+  margin-bottom: 24px;
+
+  .summary-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #1976d2;
+
+    mat-card-header {
+      mat-card-title {
         display: flex;
         align-items: center;
-        gap: 12px;
-        
-        .instance-icon {
-          color: #5f6368;
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
+        gap: 8px;
+        font-size: 18px;
+
+        mat-icon {
+          color: #1976d2;
         }
-        
-        .instance-info {
+      }
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .summary-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+
+        .summary-label {
+          font-size: 12px;
+          color: #5f6368;
+          margin-bottom: 4px;
+        }
+
+        .summary-value {
+          font-size: 24px;
+          font-weight: 500;
+          color: #3c4043;
+
+          &.primary {
+            color: #1976d2;
+          }
+
+          &.success {
+            color: #34a853;
+          }
+
+          &.error {
+            color: #ea4335;
+          }
+        }
+      }
+    }
+
+    .details-panel {
+      margin-top: 16px;
+      box-shadow: none;
+      border: 1px solid #e0e0e0;
+    }
+
+    .query-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 0;
+
+      .query-result-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+
+        .result-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+
+            &.success {
+              color: #34a853;
+            }
+
+            &.error {
+              color: #ea4335;
+            }
+          }
+
+          strong {
+            color: #3c4043;
+          }
+        }
+
+        .result-stats {
+          display: flex;
+          gap: 16px;
+          font-size: 12px;
+          color: #5f6368;
+          flex-wrap: wrap;
+        }
+
+        .error-message {
+          margin-top: 8px;
+          padding: 8px;
+          background: #fce8e6;
+          border-left: 3px solid #ea4335;
+          color: #d93025;
+          font-size: 12px;
+          border-radius: 4px;
+        }
+      }
+    }
+  }
+}
+
+// Data Table Section
+.data-table-section {
+  margin-bottom: 32px;
+
+  .results-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    mat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+
+      .card-actions {
+        margin-left: auto;
+      }
+    }
+
+    .connections-table {
+      width: 100%;
+
+      .cell-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .entity-icon {
+          color: #5f6368;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        .entity-info {
           display: flex;
           flex-direction: column;
           gap: 2px;
-          
-          .instance-name {
+
+          .entity-name {
             font-weight: 500;
-            font-size: 14px;
             color: #3c4043;
           }
-          
-          .instance-addr {
-            font-size: 12px;
+
+          .entity-type {
+            font-size: 11px;
             color: #5f6368;
-            font-family: 'Roboto Mono', monospace;
           }
         }
       }
-      
-      .ports-info {
-        .port-mapping {
-          font-family: 'Roboto Mono', monospace;
-          font-size: 13px;
-          color: #3c4043;
-          background-color: #f8f9fa;
-          padding: 4px 8px;
-          border-radius: 4px;
-          border: 1px solid #e8eaed;
-        }
-      }
-      
-      // Protocol chip styling
-      .protocol-tcp {
+
+      .granularity-chip {
         background-color: #e8f0fe;
-        color: #1a73e8;
+        color: #1967d2;
+        font-size: 12px;
       }
-      
-      .protocol-udp {
-        background-color: #e6f4ea;
-        color: #137333;
-      }
-      
-      .protocol-icmp {
-        background-color: #fef7e0;
-        color: #f57c00;
-      }
-      
-      .protocol-other {
-        background-color: #f3e8ff;
-        color: #7c3aed;
-      }
-      
-      // Action chip styling
-      .action-accept {
-        background-color: #e6f4ea;
-        color: #137333;
-        
-        mat-icon {
-          color: #137333;
-        }
-      }
-      
-      .action-reject {
-        background-color: #fef7e0;
-        color: #f57c00;
-        
-        mat-icon {
-          color: #f57c00;
-        }
-      }
-      
-      .action-drop {
-        background-color: #fce8e6;
-        color: #d93025;
-        
-        mat-icon {
-          color: #d93025;
-        }
-      }
-      
-      mat-chip {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+
+      th {
+        background-color: #f8f9fa;
+        color: #5f6368;
         font-weight: 500;
-        
-        mat-icon {
-          font-size: 16px;
-          width: 16px;
-          height: 16px;
-        }
+      }
+
+      td {
+        padding: 12px 8px;
+      }
+
+      tr:hover {
+        background-color: #f8f9fa;
       }
     }
   }
 }
 
-// Responsive design
+// Empty State
+.empty-state {
+  margin-bottom: 32px;
+
+  .empty-card {
+    border-radius: 12px;
+    text-align: center;
+    padding: 48px 24px;
+
+    .empty-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: #9aa0a6;
+      margin: 0 auto 16px;
+    }
+
+    h3 {
+      color: #3c4043;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      color: #5f6368;
+      margin: 0 0 24px 0;
+    }
+
+    .instructions {
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+      color: #5f6368;
+      line-height: 1.6;
+
+      li {
+        margin-bottom: 8px;
+      }
+    }
+  }
+}
+
+// Responsive Design
 @media (max-width: 768px) {
   .flow-logs-explorer-container {
-    padding: 16px;
+    padding: 0 16px;
   }
-  
-  .header .page-title {
-    font-size: 24px;
+
+  .header {
+    padding: 16px 0;
+
+    .page-title {
+      font-size: 24px;
+    }
+
+    .page-description {
+      font-size: 14px;
+    }
   }
-  
-  .controls-section .controls-card .controls-row {
+
+  .config-section .config-card .config-row {
     flex-direction: column;
-    align-items: stretch;
-    
-    .action-buttons {
-      margin-left: 0;
-      justify-content: center;
+
+    .dataset-field {
+      min-width: 100%;
+      width: 100%;
+    }
+
+    mat-form-field {
+      width: 100%;
     }
   }
-  
-  .metrics-overview {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+  .granularity-section .granularity-grid {
+    grid-template-columns: 1fr;
   }
-  
-  .data-table-section .data-card .flow-logs-table {
-    .instance-cell {
-      .instance-info {
-        .instance-name {
-          font-size: 12px;
-        }
-        
-        .instance-addr {
-          font-size: 10px;
-        }
-      }
-    }
+
+  .summary-section .summary-card .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-// Angular Material overrides
-::ng-deep {
-  .mat-mdc-card {
-    box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
-    border-radius: 8px;
-  }
-  
-  .mat-mdc-table {
-    .mat-mdc-header-cell {
-      font-weight: 500;
-      color: #3c4043;
-      background-color: #f8f9fa;
-    }
-    
-    .mat-mdc-row:hover {
-      background-color: #f8f9fa;
-    }
-  }
-  
-  // Custom table styling for flow logs
-  .flow-logs-table {
-    .mat-mdc-cell {
-      padding: 12px 8px;
-    }
-    
-    .mat-mdc-header-cell {
-      padding: 12px 8px;
-      font-size: 14px;
-    }
+@media (max-width: 480px) {
+  .summary-section .summary-card .summary-grid {
+    grid-template-columns: 1fr;
   }
 }
