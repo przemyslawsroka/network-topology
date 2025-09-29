@@ -35,9 +35,13 @@
     "@angular/platform-browser": "^18.2.0",
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
+    "@types/d3-hexbin": "^0.2.5",
+    "@types/topojson-client": "^3.1.5",
     "d3": "^7.9.0",
+    "d3-hexbin": "^0.2.2",
     "google-auth-library": "^9.14.2",
     "rxjs": "~7.8.0",
+    "topojson-client": "^3.1.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
   },

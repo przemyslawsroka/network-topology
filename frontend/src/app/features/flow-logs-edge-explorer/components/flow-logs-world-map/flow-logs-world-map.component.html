@@ -1,0 +1,183 @@
+<div class="world-map-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <mat-icon>public</mat-icon>
+      World Traffic Map
+    </h1>
+    <p class="subtitle">Visualize global network traffic volume and latency from VPC Flow Logs</p>
+  </div>
+
+  <!-- Configuration Section -->
+  <mat-card class="config-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>settings</mat-icon>
+        Configuration
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="config-grid">
+        <!-- BigQuery Dataset Path -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>BigQuery Table Path</mat-label>
+          <input
+            matInput
+            [(ngModel)]="datasetPath"
+            (ngModelChange)="validateAndSetConfig()"
+            placeholder="project-id.dataset-id.table-id"
+          />
+          <mat-icon matSuffix [class.valid]="isConfigValid" [class.invalid]="!isConfigValid">
+            {{ isConfigValid ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+          <mat-hint *ngIf="!isConfigValid && configError">{{ configError }}</mat-hint>
+          <mat-hint *ngIf="isConfigValid">Valid configuration ✓</mat-hint>
+        </mat-form-field>
+
+        <!-- Time Range -->
+        <mat-form-field appearance="outline">
+          <mat-label>Time Range</mat-label>
+          <mat-select [(ngModel)]="timeRangeHours">
+            <mat-option *ngFor="let option of timeRangeOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Direction -->
+        <mat-form-field appearance="outline">
+          <mat-label>Traffic Direction</mat-label>
+          <mat-select [(ngModel)]="direction">
+            <mat-option *ngFor="let option of directionOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Hex Radius Slider -->
+        <div class="slider-container">
+          <label class="slider-label">Hexagon Size: {{ hexRadius }}</label>
+          <mat-slider
+            min="10"
+            max="50"
+            step="2"
+            discrete
+            [displayWith]="formatLabel"
+          >
+            <input matSliderThumb [(ngModel)]="hexRadius" (ngModelChange)="updateHexRadius()" />
+          </mat-slider>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="action-bar">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="fetchData()"
+          [disabled]="!isConfigValid || isLoading"
+          class="query-button"
+        >
+          <mat-icon>map</mat-icon>
+          Load Traffic Map
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading city traffic data...</p>
+  </div>
+
+  <!-- Stats Summary -->
+  <mat-card *ngIf="cityData.length > 0 && !isLoading" class="stats-card">
+    <mat-card-content>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <mat-icon>location_city</mat-icon>
+          <div class="stat-content">
+            <div class="stat-label">Cities</div>
+            <div class="stat-value">{{ getCityCount() }}</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>cloud_upload</mat-icon>
+          <div class="stat-content">
+            <div class="stat-label">Total Traffic</div>
+            <div class="stat-value">{{ getTotalTraffic() }}</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>speed</mat-icon>
+          <div class="stat-content">
+            <div class="stat-label">Avg Latency</div>
+            <div class="stat-value">{{ getAvgLatency() }}</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>timer</mat-icon>
+          <div class="stat-content">
+            <div class="stat-label">Query Time</div>
+            <div class="stat-value">{{ queryLatency }} ms</div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Map Container -->
+  <mat-card class="map-card">
+    <mat-card-content>
+      <div #mapContainer class="map-container" [style.display]="cityData.length > 0 ? 'block' : 'none'"></div>
+      
+      <!-- Empty State -->
+      <div *ngIf="cityData.length === 0 && !isLoading" class="empty-state">
+        <mat-icon>explore</mat-icon>
+        <h3>No Data Yet</h3>
+        <p>Configure your BigQuery table and click "Load Traffic Map" to visualize global traffic patterns.</p>
+        <div class="help-text">
+          <h4>What you'll see:</h4>
+          <ul>
+            <li><strong>Hexagon Size</strong> - Represents traffic volume (larger = more data)</li>
+            <li><strong>Hexagon Color</strong> - Represents latency (green = fast, red = slow)</li>
+            <li><strong>Hover</strong> - Shows detailed metrics for each location</li>
+          </ul>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Info Card -->
+  <mat-card class="info-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>info</mat-icon>
+        How to Use
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <ol>
+        <li>Enter your BigQuery table path in the format: <code>project.dataset.table</code></li>
+        <li>Select the time range for analysis (longer ranges = more data)</li>
+        <li>Choose traffic direction:
+          <ul>
+            <li><strong>Destinations</strong> - Shows where your traffic is going (outbound)</li>
+            <li><strong>Sources</strong> - Shows where traffic comes from (inbound)</li>
+            <li><strong>Both</strong> - Combines both directions</li>
+          </ul>
+        </li>
+        <li>Adjust hexagon size if needed (larger hexagons for better visibility)</li>
+        <li>Click "Load Traffic Map" to visualize</li>
+        <li>Hover over hexagons to see detailed information</li>
+      </ol>
+      
+      <div class="note">
+        <mat-icon>tips_and_updates</mat-icon>
+        <p><strong>Note:</strong> This visualization requires VPC Flow Logs with geographical data (city/country). 
+        External traffic typically includes this information, while internal GCP-to-GCP traffic may not have city-level details.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

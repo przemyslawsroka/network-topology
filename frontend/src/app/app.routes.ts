@@ -38,6 +38,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/flow-logs-edge-explorer/components/flow-logs-explorer-view/flow-logs-explorer-view.component').then(m => m.FlowLogsExplorerViewComponent)
       },
       {
+        path: 'flow-logs-world-map',
+        loadComponent: () => import('./features/flow-logs-edge-explorer/components/flow-logs-world-map/flow-logs-world-map.component').then(m => m.FlowLogsWorldMapComponent)
+      },
+      {
         path: 'metric-documentation',
         loadComponent: () => import('./features/metric-documentation/components/metric-documentation-view/metric-documentation-view.component').then(m => m.MetricDocumentationViewComponent)
       },
