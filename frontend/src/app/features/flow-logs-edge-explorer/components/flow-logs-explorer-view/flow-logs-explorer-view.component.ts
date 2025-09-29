@@ -69,7 +69,7 @@ export class FlowLogsExplorerViewComponent implements OnInit {
   selectedGranularities: Granularity[] = [];
 
   // BigQuery configuration
-  datasetPath: string = 'net-top-viz-demo-208511.VPCFlowLogs.vpc_flows';
+  datasetPath: string = 'net-top-viz-demo-208511.default_bq_loganalytics._AllLogs';
   config: FlowLogsConfig | null = null;
   isConfigValid: boolean = false;
   configError: string = '';
@@ -92,8 +92,8 @@ export class FlowLogsExplorerViewComponent implements OnInit {
     // Load available granularities
     this.allGranularities = this.flowLogsDataService.getAvailableGranularities();
     
-    // Select first 3 granularities by default
-    this.selectedGranularities = this.allGranularities.slice(0, 3);
+    // Select all granularities by default
+    this.selectedGranularities = [...this.allGranularities];
 
     // Validate initial dataset path
     this.validateAndSetConfig();

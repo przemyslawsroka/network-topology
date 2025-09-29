@@ -1,0 +1,105 @@
+<div class="topology-container">
+  <div class="topology-header">
+    <h1 class="page-title">Flow Topology</h1>
+    <p class="page-subtitle">
+      Visualize your network topology based on actual VPC Flow Logs from BigQuery
+    </p>
+  </div>
+
+  <div class="topology-content">
+    <!-- Configuration Card -->
+    <mat-card class="config-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>settings</mat-icon>
+          Configuration
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-row">
+          <mat-form-field appearance="outline" class="dataset-field">
+            <mat-label>BigQuery Table Path</mat-label>
+            <input matInput 
+                   [(ngModel)]="datasetPath" 
+                   (ngModelChange)="validateAndSetConfig()"
+                   placeholder="project.dataset.table">
+            <mat-icon matSuffix [color]="isConfigValid ? 'primary' : 'warn'">
+              {{ isConfigValid ? 'check_circle' : 'error' }}
+            </mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Time Range</mat-label>
+            <mat-select [(ngModel)]="timeRangeHours">
+              <mat-option *ngFor="let option of timeRangeOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="refreshData()"
+                  [disabled]="!isConfigValid || isLoading">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Latency & Stats Card -->
+    <mat-card class="latency-card" *ngIf="latencyInfo">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>speed</mat-icon>
+          Data Loading Statistics
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Total Load Time</div>
+            <div class="stat-value primary">{{latencyInfo.totalLatency}}ms</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Queries Executed</div>
+            <div class="stat-value">{{latencyInfo.queryCount}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Connections Found</div>
+            <div class="stat-value">{{latencyInfo.connectionCount}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Nodes</div>
+            <div class="stat-value">{{nodes.length}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Edges</div>
+            <div class="stat-value">{{links.length}}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Query Success</div>
+            <div class="stat-value success">{{latencyInfo.successCount}}/{{latencyInfo.queryCount}}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Loading Spinner -->
+    <mat-card class="loading-card" *ngIf="isLoading">
+      <mat-card-content class="loading-content">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading flow topology from BigQuery...</p>
+        <p class="loading-detail">Analyzing VPC Flow Logs for last {{timeRangeHours}} hour(s)</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Network Graph -->
+    <mat-card class="graph-card" *ngIf="!isLoading">
+      <mat-card-content>
+        <app-network-graph [nodes]="nodes" [links]="links"></app-network-graph>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

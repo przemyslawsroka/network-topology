@@ -18,7 +18,7 @@
         </tr>
         <tr class="mat-row">
           <td class="mat-cell"><code>as_paths</code></td>
-          <td class="mat-cell">List of egress AS paths. Each AS path is a struct in the format {{ '{' }}as_numbers: string[]{{ '}' }}.</td>
+          <td class="mat-cell">List of egress AS paths. Each AS path is a struct in the format {as_numbers: string[]}.</td>
         </tr>
         <tr class="mat-row">
           <td class="mat-cell"><code>bytes_sent</code></td>
@@ -492,6 +492,46 @@
           <th class="mat-header-cell">Resource Type</th>
           <th class="mat-header-cell">Source Field</th>
           <th class="mat-header-cell">Description</th>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VM Instance</td>
+          <td class="mat-cell"><code>src_instance</code>, <code>dest_instance</code></td>
+          <td class="mat-cell">A virtual machine instance in Google Compute Engine.</td>
+        </tr>
+        <tr class="mat-row">
+          <td class="mat-cell">VPC Network</td>
+          <td class="mat-cell"><code>src_vpc</code>, <code>dest_vpc</code></td>
+          <td class="mat-cell">A Virtual Private Cloud network.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">Subnetwork</td>
+            <td class="mat-cell"><code>src_vpc.subnetwork_name</code>, <code>dest_vpc.subnetwork_name</code></td>
+            <td class="mat-cell">A subnetwork within a VPC network.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">GKE Cluster</td>
+            <td class="mat-cell"><code>src_gke_details.cluster</code>, <code>dest_gke_details.cluster</code></td>
+            <td class="mat-cell">A Google Kubernetes Engine cluster.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">GKE Pod</td>
+            <td class="mat-cell"><code>src_gke_details.pod</code>, <code>dest_gke_details.pod</code></td>
+            <td class="mat-cell">A pod within a GKE cluster.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">GKE Service</td>
+            <td class="mat-cell"><code>src_gke_details.service</code>, <code>dest_gke_details.service</code></td>
+            <td class="mat-cell">A service within a GKE cluster.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">Region</td>
+            <td class="mat-cell"><code>src_instance.region</code>, <code>dest_instance.region</code></td>
+            <td class="mat-cell">The geographic region of a resource.</td>
+        </tr>
+        <tr class="mat-row">
+            <td class="mat-cell">Zone</td>
+            <td class="mat-cell"><code>src_instance.zone</code>, <code>dest_instance.zone</code></td>
+            <td class="mat-cell">The zone within a region where a resource is located.</td>
         </tr>
       </table>
     </mat-card-content>

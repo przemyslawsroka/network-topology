@@ -26,6 +26,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/network-topology/components/topology-view/topology-view.component').then(m => m.TopologyViewComponent)
       },
       {
+        path: 'flow-topology',
+        loadComponent: () => import('./features/flow-topology/components/flow-topology-view/flow-topology-view.component').then(m => m.FlowTopologyViewComponent)
+      },
+      {
         path: 'metric-edge-explorer',
         loadComponent: () => import('./features/metric-edge-explorer/components/edge-explorer-view/edge-explorer-view.component').then(m => m.EdgeExplorerViewComponent)
       },

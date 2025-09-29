@@ -42,70 +42,71 @@ export interface FlowLogsConfig {
 export class FlowLogsDataService {
 
   // Define available granularities for VPC Flow Logs analysis
+  // Using JSON field paths for Log Analytics bucket views
   private readonly GRANULARITIES: Granularity[] = [
     {
       displayName: 'Instance to Instance',
-      sourceField: 'src_instance_name',
-      targetField: 'dest_instance_name',
+      sourceField: 'json_payload.src_instance.vm_name',
+      targetField: 'json_payload.dest_instance.vm_name',
       sourceType: 'Instance',
       targetType: 'Instance',
       description: 'Direct instance-to-instance communication'
     },
     {
       displayName: 'Instance to IP',
-      sourceField: 'src_instance_name',
-      targetField: 'dest_ip',
+      sourceField: 'json_payload.src_instance.vm_name',
+      targetField: 'json_payload.connection.dest_ip',
       sourceType: 'Instance',
       targetType: 'IP Address',
       description: 'Instance to specific IP address flows'
     },
     {
       displayName: 'IP to Instance',
-      sourceField: 'src_ip',
-      targetField: 'dest_instance_name',
+      sourceField: 'json_payload.connection.src_ip',
+      targetField: 'json_payload.dest_instance.vm_name',
       sourceType: 'IP Address',
       targetType: 'Instance',
       description: 'IP address to instance flows'
     },
     {
-      displayName: 'Subnet to Subnet',
-      sourceField: 'src_subnet_name',
-      targetField: 'dest_subnet_name',
-      sourceType: 'Subnet',
-      targetType: 'Subnet',
-      description: 'Subnet-to-subnet traffic aggregation'
-    },
-    {
       displayName: 'VPC to VPC',
-      sourceField: 'src_vpc_name',
-      targetField: 'dest_vpc_name',
+      sourceField: 'json_payload.src_vpc.vpc_name',
+      targetField: 'json_payload.dest_vpc.vpc_name',
       sourceType: 'VPC',
       targetType: 'VPC',
       description: 'VPC-to-VPC traffic patterns'
     },
     {
       displayName: 'Zone to Zone',
-      sourceField: 'src_zone',
-      targetField: 'dest_zone',
+      sourceField: 'json_payload.src_instance.zone',
+      targetField: 'json_payload.dest_instance.zone',
       sourceType: 'Zone',
       targetType: 'Zone',
       description: 'Cross-zone traffic analysis'
     },
     {
       displayName: 'Region to Region',
-      sourceField: 'src_region',
-      targetField: 'dest_region',
+      sourceField: 'json_payload.src_gcp_region',
+      targetField: 'json_payload.dest_gcp_region',
       sourceType: 'Region',
       targetType: 'Region',
       description: 'Cross-region traffic flows'
     },
     {
-      displayName: 'Instance to External',
-      sourceField: 'src_instance_name',
-      targetField: 'dest_ip',
+      displayName: 'Project to Project',
+      sourceField: 'json_payload.src_instance.project_id',
+      targetField: 'json_payload.dest_instance.project_id',
+      sourceType: 'Project',
+      targetType: 'Project',
+      description: 'Cross-project traffic flows'
+    },
+    {
+      displayName: 'Instance to Country',
+      sourceField: 'json_payload.src_instance.vm_name',
+      targetField: 'json_payload.dest_country',
       sourceType: 'Instance',
-      targetType: 'External IP',
-      description: 'Internal to external traffic'
+      targetType: 'Country',
+      description: 'Instance to external country'
     }
   ];
 
@@ -178,7 +179,7 @@ export class FlowLogsDataService {
   }
 
   /**
-   * Build BigQuery SQL for VPC Flow Logs
+   * Build BigQuery SQL for VPC Flow Logs from Log Analytics bucket
    */
   private buildQuery(
     config: FlowLogsConfig,
@@ -195,22 +196,41 @@ export class FlowLogsDataService {
     const startTimestamp = startTime.toISOString();
     const endTimestamp = endTime.toISOString();
 
-    // Build query based on granularity
-    // Note: Field names may need adjustment based on actual BigQuery schema
+    // Extract field names from JSON paths
+    const sourceFieldExtract = this.buildJsonExtract(granularity.sourceField);
+    const targetFieldExtract = this.buildJsonExtract(granularity.targetField);
+
+    // Build query for Log Analytics bucket with JSON payload
     const query = `
+      WITH flowLogs AS (
+        SELECT
+          ${sourceFieldExtract} AS source_name,
+          ${targetFieldExtract} AS target_name,
+          CAST(JSON_VALUE(json_payload.bytes_sent) AS INT64) AS bytes_sent,
+          CAST(JSON_VALUE(json_payload.packets_sent) AS INT64) AS packets_sent,
+          timestamp,
+          IF(JSON_VALUE(json_payload.reporter) IN ('SRC', 'SRC_GATEWAY'), 'SRC', 'DEST') AS reporter
+        FROM ${tableFQN}
+        WHERE
+          log_id IN ('compute.googleapis.com/vpc_flows', 'networkmanagement.googleapis.com/vpc_flows')
+          AND timestamp >= TIMESTAMP('${startTimestamp}')
+          AND timestamp <= TIMESTAMP('${endTimestamp}')
+          AND json_payload IS NOT NULL
+      )
       SELECT
-        ${granularity.sourceField} AS source_name,
-        ${granularity.targetField} AS target_name,
+        source_name,
+        target_name,
         SUM(bytes_sent) AS total_bytes,
         SUM(packets_sent) AS total_packets,
         COUNT(*) AS flow_count
-      FROM ${tableFQN}
+      FROM flowLogs
       WHERE
-        timestamp >= TIMESTAMP('${startTimestamp}')
-        AND timestamp <= TIMESTAMP('${endTimestamp}')
-        AND ${granularity.sourceField} IS NOT NULL
-        AND ${granularity.targetField} IS NOT NULL
-        AND ${granularity.sourceField} != ${granularity.targetField}
+        reporter = 'SRC'
+        AND source_name IS NOT NULL
+        AND target_name IS NOT NULL
+        AND source_name != ''
+        AND target_name != ''
+        AND source_name != target_name
       GROUP BY
         source_name,
         target_name
@@ -223,6 +243,15 @@ export class FlowLogsDataService {
 
     console.log(`BigQuery for ${granularity.displayName}:`, query);
     return query;
+  }
+
+  /**
+   * Build JSON_VALUE extract expression from field path
+   */
+  private buildJsonExtract(fieldPath: string): string {
+    // Field path format: json_payload.src_instance.vm_name
+    // Need to convert to: JSON_VALUE(json_payload.src_instance.vm_name)
+    return `JSON_VALUE(${fieldPath})`;
   }
 
   /**

@@ -16,14 +16,13 @@
         <mat-expansion-panel>
           <mat-expansion-panel-header>
             <mat-panel-title>
-              <mat-icon>filter_list</mat-icon>
-              <span class="filter-title">Filters & Controls</span>
+              <mat-icon>tune</mat-icon>
+              <span class="filter-title">Select Granularities ({{ selectedGranularities.length }}/{{ allGranularities.length }} selected)</span>
             </mat-panel-title>
           </mat-expansion-panel-header>
           
           <div class="controls-container">
             <div class="filter-section">
-              <h4 class="filter-heading">Select Granularity</h4>
               <mat-selection-list #granularityList [(ngModel)]="selectedGranularities">
                 <mat-list-option *ngFor="let granularity of allGranularities" [value]="granularity">
                   {{ granularity.displayName }}
@@ -32,11 +31,11 @@
             </div>
 
             <div class="actions-section">
-              <button mat-flat-button color="primary" (click)="fetchData()" [disabled]="isLoading">
-                <mat-icon>play_arrow</mat-icon>
-                Run Query
+              <button mat-flat-button color="primary" (click)="fetchData()" [disabled]="isLoading || selectedGranularities.length === 0">
+                <mat-icon>search</mat-icon>
+                Query Metrics
               </button>
-              <button mat-stroked-button (click)="exportData()" [disabled]="isLoading">
+              <button mat-stroked-button (click)="exportData()" [disabled]="isLoading || connections.length === 0">
                 <mat-icon>download</mat-icon>
                 Export
               </button>

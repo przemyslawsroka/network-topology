@@ -22,7 +22,7 @@
             <input matInput 
                    [(ngModel)]="datasetPath" 
                    (ngModelChange)="validateAndSetConfig()"
-                   placeholder="e.g., net-top-viz-demo-208511.VPCFlowLogs.vpc_flows">
+                   placeholder="e.g., net-top-viz-demo-208511.default_bq_loganalytics._AllLogs">
             <mat-icon matSuffix [color]="isConfigValid ? 'primary' : 'warn'">
               {{ isConfigValid ? 'check_circle' : 'error' }}
             </mat-icon>
